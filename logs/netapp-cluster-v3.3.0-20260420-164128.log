@@ -1,0 +1,25 @@
+[2026-04-20 16:41:28] [INFO] ==============================
+[2026-04-20 16:41:28] [INFO] Start inrichting NetApp cluster 192.168.1.22
+[2026-04-20 16:41:28] [INFO] Versie:        v3.3.0 (2026-04-16)
+[2026-04-20 16:41:28] [INFO] Config:        setup_ontap_2node_cluster.conf
+[2026-04-20 16:41:28] [INFO] Log file:      ./logs/netapp-cluster-v3.3.0-20260420-164128.log
+[2026-04-20 16:41:28] [INFO] Verbose:       0 | Dry-run: 0 | Color: auto
+[2026-04-20 16:41:28] [INFO] User:          admin
+[2026-04-20 16:41:28] [INFO] Nodes:         na-clus01-01 na-clus02-02
+[2026-04-20 16:41:28] [INFO] RAID type:     raid_dp | Disks: 8 | Spare reserve: 1
+[2026-04-20 16:41:28] [INFO] ==============================
+[2026-04-20 16:41:28] [INFO] Controleer SSH-verbinding naar admin@192.168.1.22 ...
+[2026-04-20 16:41:28] [INFO] Key-based authenticatie niet beschikbaar, probeer wachtwoord...
+[2026-04-20 16:41:32] [INFO] SSH-verbinding succesvol (sshpass wachtwoordauth).
+[2026-04-20 16:41:33] [INFO] NTP server 192.168.1.1 bestaat al
+[2026-04-20 16:41:34] [INFO] Node na-clus01-01 heeft al een non-root data aggregate, geen nieuwe create
+[2026-04-20 16:41:35] [INFO] Node na-clus02-02 heeft al een non-root data aggregate, geen nieuwe create
+[2026-04-20 16:41:36] [INFO] IPspace ipspace_data bestaat al
+
+Last login time: 4/20/2026 14:41:36
+Unsuccessful login attempts since last login: 1
+
+Error: "na-clus01-01" is an invalid value for field "-node <nodename>"
+       Valid choices in this command's context: lab-clus01-01, lab-clus01-02
+
+[2026-04-20 16:41:37] [ERROR] Mislukt: Maak VLAN port na-clus01-01:e0d-20

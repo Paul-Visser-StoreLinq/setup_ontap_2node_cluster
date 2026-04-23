@@ -1,0 +1,34 @@
+[2026-04-20 18:26:02] [INFO] ==============================
+[2026-04-20 18:26:02] [INFO] Start inrichting NetApp cluster 192.168.1.22
+[2026-04-20 18:26:02] [INFO] Versie:        v3.3.0 (2026-04-16)
+[2026-04-20 18:26:02] [INFO] Config:        setup_ontap_2node_cluster.conf
+[2026-04-20 18:26:02] [INFO] Log file:      ./logs/netapp-cluster-v3.3.0-20260420-182602.log
+[2026-04-20 18:26:02] [INFO] Verbose:       0 | Dry-run: 0 | Color: auto
+[2026-04-20 18:26:02] [INFO] User:          admin
+[2026-04-20 18:26:02] [INFO] Nodes:         lab-clus01-01 lab-clus01-02
+[2026-04-20 18:26:02] [INFO] RAID type:     raid_dp | Disks: 8 | Spare reserve: 1
+[2026-04-20 18:26:02] [INFO] ==============================
+[2026-04-20 18:26:02] [INFO] Controleer SSH-verbinding naar admin@192.168.1.22 ...
+[2026-04-20 18:26:02] [INFO] Key-based authenticatie niet beschikbaar, probeer wachtwoord...
+[2026-04-20 18:26:06] [INFO] SSH-verbinding succesvol (sshpass wachtwoordauth).
+[2026-04-20 18:26:07] [INFO] NTP server 192.168.1.1 bestaat al
+[2026-04-20 18:26:08] [INFO] Node lab-clus01-01 heeft al een non-root data aggregate, geen nieuwe create
+[2026-04-20 18:26:09] [INFO] Node lab-clus01-02 heeft al een non-root data aggregate, geen nieuwe create
+[2026-04-20 18:26:10] [INFO] IPspace ipspace_data bestaat al
+[2026-04-20 18:26:11] [INFO] VLAN port lab-clus01-01:e0d-20 bestaat al
+[2026-04-20 18:26:12] [INFO] VLAN port lab-clus01-02:e0d-20 bestaat al
+
+Last login time: 4/20/2026 16:26:12
+Unsuccessful login attempts since last login: 1
+
+[2026-04-20 18:26:13] [INFO] Zet MTU 1500 op broadcast domain bd_cifs
+[2026-04-20 18:26:15] [INFO] Broadcast domain bd_cifs bestaat al
+
+Last login time: 4/20/2026 16:26:15
+Unsuccessful login attempts since last login: 1
+
+Error: command failed: Specifying the system Vserver ("Cluster") is not
+       supported because custom failover groups are not supported in the
+       "Cluster" IPspace.
+
+[2026-04-20 18:26:16] [ERROR] Mislukt: Maak failover group fg_cifs

@@ -1,0 +1,39 @@
+[2026-04-20 16:47:06] [INFO] ==============================
+[2026-04-20 16:47:06] [INFO] Start inrichting NetApp cluster 192.168.1.22
+[2026-04-20 16:47:06] [INFO] Versie:        v3.3.0 (2026-04-16)
+[2026-04-20 16:47:06] [INFO] Config:        setup_ontap_2node_cluster.conf
+[2026-04-20 16:47:06] [INFO] Log file:      ./logs/netapp-cluster-v3.3.0-20260420-164706.log
+[2026-04-20 16:47:06] [INFO] Verbose:       0 | Dry-run: 0 | Color: auto
+[2026-04-20 16:47:06] [INFO] User:          admin
+[2026-04-20 16:47:06] [INFO] Nodes:         lab-clus01-01 lab-clus01-02
+[2026-04-20 16:47:06] [INFO] RAID type:     raid_dp | Disks: 8 | Spare reserve: 1
+[2026-04-20 16:47:06] [INFO] ==============================
+[2026-04-20 16:47:06] [INFO] Controleer SSH-verbinding naar admin@192.168.1.22 ...
+[2026-04-20 16:47:06] [INFO] Key-based authenticatie niet beschikbaar, probeer wachtwoord...
+[2026-04-20 16:47:10] [INFO] SSH-verbinding succesvol (sshpass wachtwoordauth).
+[2026-04-20 16:47:11] [INFO] NTP server 192.168.1.1 bestaat al
+[2026-04-20 16:47:12] [INFO] Node lab-clus01-01 heeft al een non-root data aggregate, geen nieuwe create
+[2026-04-20 16:47:13] [INFO] Node lab-clus01-02 heeft al een non-root data aggregate, geen nieuwe create
+[2026-04-20 16:47:14] [INFO] IPspace ipspace_data bestaat al
+
+Last login time: 4/20/2026 14:47:15
+Unsuccessful login attempts since last login: 1
+
+[2026-04-20 16:47:16] [INFO] Maak VLAN port lab-clus01-01:e0d-20
+
+Last login time: 4/20/2026 14:47:17
+Unsuccessful login attempts since last login: 1
+
+[2026-04-20 16:47:17] [INFO] Maak VLAN port lab-clus01-02:e0d-20
+
+Last login time: 4/20/2026 14:47:20
+Unsuccessful login attempts since last login: 1
+
+Error: command failed: Port "lab-clus01-01:e0c" cannot be used because it is
+       currently the home port or current port of a LIF. To view LIFs with a
+       specified home port, use the "network interface show -home-node
+       <nodename> -home-port {<netport>|<ifgrp>}" command. To view LIFs with a
+       specified current port, use the "network interface show -curr-node
+       <nodename> -curr-port {<netport>|<ifgrp>}" command. 
+
+[2026-04-20 16:47:20] [ERROR] Mislukt: Verwijder port lab-clus01-01:e0c uit Default broadcast domain

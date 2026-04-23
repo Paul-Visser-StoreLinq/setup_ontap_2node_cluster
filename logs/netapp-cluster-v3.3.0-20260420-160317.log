@@ -1,0 +1,16 @@
+[2026-04-20 16:03:17] [INFO] ==============================
+[2026-04-20 16:03:17] [INFO] Start inrichting NetApp cluster 192.168.1.22
+[2026-04-20 16:03:17] [INFO] Versie:        v3.3.0 (2026-04-16)
+[2026-04-20 16:03:17] [INFO] Config:        setup_ontap_2node_cluster.conf
+[2026-04-20 16:03:17] [INFO] Log file:      ./logs/netapp-cluster-v3.3.0-20260420-160317.log
+[2026-04-20 16:03:17] [INFO] Verbose:       0 | Dry-run: 0 | Color: auto
+[2026-04-20 16:03:17] [INFO] User:          admin
+[2026-04-20 16:03:17] [INFO] Nodes:         na-clus01-01 na-clus02-02
+[2026-04-20 16:03:17] [INFO] RAID type:     raid_dp | Disks: 8 | Spare reserve: 1
+[2026-04-20 16:03:17] [INFO] ==============================
+[2026-04-20 16:03:17] [INFO] Controleer SSH-verbinding naar admin@192.168.1.22 ...
+[2026-04-20 16:03:18] [INFO] Key-based authenticatie niet beschikbaar, probeer wachtwoord...
+[2026-04-20 16:03:18] [INFO] Geen sshpass of NETAPP_PASSWORD gevonden.
+[2026-04-20 16:03:18] [INFO] SSH zal interactief om een wachtwoord vragen bij elke opdracht.
+[2026-04-20 16:03:18] [WARN] Tip: exporteer NETAPP_PASSWORD en installeer sshpass voor automatisering.
+[2026-04-20 16:03:58] [ERROR] SSH-verbinding mislukt naar 192.168.1.22 als gebruiker admin.

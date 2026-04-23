@@ -1,0 +1,40 @@
+[2026-04-20 19:07:53] [INFO] ==============================
+[2026-04-20 19:07:53] [INFO] Start inrichting NetApp cluster 192.168.1.22
+[2026-04-20 19:07:53] [INFO] Versie:        v3.3.0 (2026-04-16)
+[2026-04-20 19:07:53] [INFO] Config:        setup_ontap_2node_cluster.conf
+[2026-04-20 19:07:53] [INFO] Log file:      ./logs/netapp-cluster-v3.3.0-20260420-190753.log
+[2026-04-20 19:07:53] [INFO] Verbose:       0 | Dry-run: 0 | Color: auto
+[2026-04-20 19:07:53] [INFO] User:          admin
+[2026-04-20 19:07:53] [INFO] Nodes:         lab-clus01-01 lab-clus01-02
+[2026-04-20 19:07:53] [INFO] RAID type:     raid_dp | Disks: 8 | Spare reserve: 1
+[2026-04-20 19:07:53] [INFO] ==============================
+[2026-04-20 19:07:53] [INFO] Controleer SSH-verbinding naar admin@192.168.1.22 ...
+[2026-04-20 19:07:54] [INFO] Key-based authenticatie niet beschikbaar, probeer wachtwoord...
+[2026-04-20 19:07:58] [INFO] SSH-verbinding succesvol (sshpass wachtwoordauth).
+[2026-04-20 19:07:58] [INFO] NTP server 192.168.1.1 bestaat al
+[2026-04-20 19:07:59] [INFO] Node lab-clus01-01: 0 spare disks beschikbaar (nodig: 8 + 1 reserve = 9)
+[2026-04-20 19:07:59] [WARN] Node lab-clus01-01: onvoldoende spare disks voor aggr_data_lab_clus01_01 (0 beschikbaar, 9 nodig incl. 1 reserve)
+[2026-04-20 19:08:01] [INFO] Node lab-clus01-02: 0 spare disks beschikbaar (nodig: 8 + 1 reserve = 9)
+[2026-04-20 19:08:01] [WARN] Node lab-clus01-02: onvoldoende spare disks voor aggr_data_lab_clus01_02 (0 beschikbaar, 9 nodig incl. 1 reserve)
+[2026-04-20 19:08:01] [INFO] IPspace ipspace_data bestaat al
+[2026-04-20 19:08:02] [INFO] VLAN port lab-clus01-01:e0d-20 bestaat al
+[2026-04-20 19:08:03] [INFO] VLAN port lab-clus01-02:e0d-20 bestaat al
+
+Last login time: 4/20/2026 17:08:04
+Unsuccessful login attempts since last login: 1
+
+[2026-04-20 19:08:05] [INFO] Zet MTU 1500 op broadcast domain bd_cifs
+
+Last login time: 4/20/2026 17:08:05
+Unsuccessful login attempts since last login: 1
+
+[2026-04-20 19:08:06] [INFO] Zet MTU 9000 op broadcast domain bd_vlan20
+[2026-04-20 19:08:07] [INFO] Broadcast domain bd_cifs bestaat al
+[2026-04-20 19:08:10] [INFO] Broadcast domain bd_vlan20 bestaat al
+
+Last login time: 4/20/2026 17:08:10
+Unsuccessful login attempts since last login: 1
+
+Error: invalid argument "-rootvolume-aggregate"
+
+[2026-04-20 19:08:11] [ERROR] Mislukt: Maak vserver svm_cifs01 (cifs)

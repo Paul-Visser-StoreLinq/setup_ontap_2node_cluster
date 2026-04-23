@@ -1,0 +1,45 @@
+[2026-04-20 19:30:51] [INFO] ==============================
+[2026-04-20 19:30:51] [INFO] Start inrichting NetApp cluster 192.168.1.22
+[2026-04-20 19:30:51] [INFO] Versie:        v3.3.0 (2026-04-16)
+[2026-04-20 19:30:51] [INFO] Config:        setup_ontap_2node_cluster.conf
+[2026-04-20 19:30:51] [INFO] Log file:      ./logs/netapp-cluster-v3.3.0-20260420-193051.log
+[2026-04-20 19:30:51] [INFO] Verbose:       0 | Dry-run: 0 | Color: auto
+[2026-04-20 19:30:51] [INFO] User:          admin
+[2026-04-20 19:30:51] [INFO] Nodes:         lab-clus01-01 lab-clus01-02
+[2026-04-20 19:30:51] [INFO] RAID type:     raid_dp | Disks: 8 | Spare reserve: 1
+[2026-04-20 19:30:51] [INFO] ==============================
+[2026-04-20 19:30:55] [INFO] Controleer SSH-verbinding naar admin@192.168.1.22 ...
+[2026-04-20 19:30:55] [INFO] Key-based authenticatie niet beschikbaar, probeer wachtwoord...
+[2026-04-20 19:30:56] [INFO] SSH-verbinding succesvol (sshpass wachtwoordauth).
+[2026-04-20 19:30:57] [INFO] NTP server 192.168.1.1 bestaat al
+[2026-04-20 19:30:57] [INFO] Data aggregate aggr_data_lab_clus01_01 bestaat al
+[2026-04-20 19:30:58] [DEBUG] Raw spare disks output for lab-clus01-02: |Last login time: 4/20/2026 17:30:58|Unsuccessful login attempts since last login: 1|                                                                                           Usable           Disk    Container   Container|Disk                   Size Shelf Bay Type    Type        Name      Owner|---------------- ---------- ----- --- ------- ----------- --------- --------|NET-2.11             1020MB     -  19 FCAL    spare       Pool0     lab-clus01-02|NET-2.13             1020MB     -  20 FCAL    spare       Pool0     lab-clus01-02|NET-2.15             1020MB     -  21 FCAL    spare       Pool0     lab-clus01-02|NET-2.17             1020MB     -  22 FCAL    spare       Pool0     lab-clus01-02|
+[2026-04-20 19:30:58] [INFO] Node lab-clus01-02: 11 spare disks beschikbaar (nodig: 8 + 1 reserve = 9)
+
+Last login time: 4/20/2026 17:30:58
+Unsuccessful login attempts since last login: 1
+[Job 79] Job is queued: Create aggr_data_lab_clus01_02.                        [Job 79] Job is queued: Create aggr_data_lab_clus01_02.                        [Job 79] Job is queued: Create aggr_data_lab_clus01_02.                        [Job 79] Job is queued: Create aggr_data_lab_clus01_02.                        [Job 79] Job is queued: Create aggr_data_lab_clus01_02.                        [Job 79] Job is queued: Create aggr_data_lab_clus01_02.                        [Job 79] Job is queued: Create aggr_data_lab_clus01_02.                        [Job 79] Job is queued: Create aggr_data_lab_clus01_02.                        [Job 79] Job is queued: Create aggr_data_lab_clus01_02.                        [Job 79] creating aggregate aggr_data_lab_clus01_02 ...                        [Job 79] Job succeeded: DONE                                                   
+
+[2026-04-20 19:31:10] [INFO] Maak data aggregate aggr_data_lab_clus01_02 op lab-clus01-02 (11 spare, 1 reserve aangehouden)
+[2026-04-20 19:31:13] [INFO] IPspace ipspace_data bestaat al
+[2026-04-20 19:31:14] [INFO] VLAN port lab-clus01-01:e0d-20 bestaat al
+[2026-04-20 19:31:15] [INFO] VLAN port lab-clus01-02:e0d-20 bestaat al
+
+Last login time: 4/20/2026 17:31:15
+Unsuccessful login attempts since last login: 1
+
+[2026-04-20 19:31:16] [INFO] Zet MTU 1500 op broadcast domain bd_cifs
+
+Last login time: 4/20/2026 17:31:16
+Unsuccessful login attempts since last login: 1
+
+[2026-04-20 19:31:17] [INFO] Zet MTU 9000 op broadcast domain bd_vlan20
+[2026-04-20 19:31:19] [INFO] Broadcast domain bd_cifs bestaat al
+[2026-04-20 19:31:20] [INFO] Broadcast domain bd_vlan20 bestaat al
+
+Last login time: 4/20/2026 17:31:21
+Unsuccessful login attempts since last login: 1
+
+Error: invalid argument "-rootvolume-aggregate"
+
+[2026-04-20 19:31:22] [ERROR] Mislukt: Maak vserver svm_cifs01 (cifs)

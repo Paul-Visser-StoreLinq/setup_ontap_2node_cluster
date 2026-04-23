@@ -1,0 +1,33 @@
+[2026-04-20 16:09:15] [INFO] ==============================
+[2026-04-20 16:09:15] [INFO] Start inrichting NetApp cluster 192.168.1.22
+[2026-04-20 16:09:15] [INFO] Versie:        v3.3.0 (2026-04-16)
+[2026-04-20 16:09:15] [INFO] Config:        setup_ontap_2node_cluster.conf
+[2026-04-20 16:09:15] [INFO] Log file:      ./logs/netapp-cluster-v3.3.0-20260420-160915.log
+[2026-04-20 16:09:15] [INFO] Verbose:       0 | Dry-run: 0 | Color: auto
+[2026-04-20 16:09:15] [INFO] User:          admin
+[2026-04-20 16:09:15] [INFO] Nodes:         na-clus01-01 na-clus02-02
+[2026-04-20 16:09:15] [INFO] RAID type:     raid_dp | Disks: 8 | Spare reserve: 1
+[2026-04-20 16:09:15] [INFO] ==============================
+[2026-04-20 16:09:15] [INFO] Controleer SSH-verbinding naar admin@192.168.1.22 ...
+[2026-04-20 16:09:15] [INFO] Key-based authenticatie niet beschikbaar, probeer wachtwoord...
+[2026-04-20 16:09:21] [INFO] sshpass niet beschikbaar, probeer te installeren met brew...
+[2026-04-20 16:09:57] [INFO] sshpass succesvol geïnstalleerd.
+[2026-04-20 16:09:58] [INFO] SSH-verbinding succesvol (sshpass wachtwoordauth).
+[2026-04-20 16:09:58] [INFO] NTP server 192.168.1.1 bestaat al
+[2026-04-20 16:09:59] [INFO] Node na-clus01-01 heeft al een non-root data aggregate, geen nieuwe create
+[2026-04-20 16:10:01] [INFO] Node na-clus02-02 heeft al een non-root data aggregate, geen nieuwe create
+
+Last login time: 4/20/2026 14:10:01
+Unsuccessful login attempts since last login: 1
+
+[2026-04-20 16:10:03] [INFO] Maak IPspace ipspace_data
+[2026-04-20 16:10:04] [INFO] VLAN port na-clus01-01:e0d-20 bestaat al
+[2026-04-20 16:10:04] [INFO] VLAN port na-clus02-02:e0d-20 bestaat al
+
+Last login time: 4/20/2026 14:10:06
+Unsuccessful login attempts since last login: 1
+
+Error: "na-clus01-01:e0c" is an invalid value for field "-ports
+       <<node>:<port>>", ...
+
+[2026-04-20 16:10:07] [ERROR] Mislukt: Maak broadcast domain bd_cifs

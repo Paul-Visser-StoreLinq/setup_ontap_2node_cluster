@@ -1,0 +1,37 @@
+[2026-04-20 18:28:37] [INFO] ==============================
+[2026-04-20 18:28:37] [INFO] Start inrichting NetApp cluster 192.168.1.22
+[2026-04-20 18:28:37] [INFO] Versie:        v3.3.0 (2026-04-16)
+[2026-04-20 18:28:37] [INFO] Config:        setup_ontap_2node_cluster.conf
+[2026-04-20 18:28:37] [INFO] Log file:      ./logs/netapp-cluster-v3.3.0-20260420-182837.log
+[2026-04-20 18:28:37] [INFO] Verbose:       0 | Dry-run: 0 | Color: auto
+[2026-04-20 18:28:37] [INFO] User:          admin
+[2026-04-20 18:28:37] [INFO] Nodes:         lab-clus01-01 lab-clus01-02
+[2026-04-20 18:28:37] [INFO] RAID type:     raid_dp | Disks: 8 | Spare reserve: 1
+[2026-04-20 18:28:37] [INFO] ==============================
+[2026-04-20 18:28:37] [INFO] Controleer SSH-verbinding naar admin@192.168.1.22 ...
+[2026-04-20 18:28:37] [INFO] Key-based authenticatie niet beschikbaar, probeer wachtwoord...
+[2026-04-20 18:28:43] [INFO] SSH-verbinding succesvol (sshpass wachtwoordauth).
+[2026-04-20 18:28:44] [INFO] NTP server 192.168.1.1 bestaat al
+[2026-04-20 18:28:45] [INFO] Node lab-clus01-01 heeft al een non-root data aggregate, geen nieuwe create
+[2026-04-20 18:28:46] [INFO] Node lab-clus01-02 heeft al een non-root data aggregate, geen nieuwe create
+[2026-04-20 18:28:46] [INFO] IPspace ipspace_data bestaat al
+[2026-04-20 18:28:47] [INFO] VLAN port lab-clus01-01:e0d-20 bestaat al
+[2026-04-20 18:28:49] [INFO] VLAN port lab-clus01-02:e0d-20 bestaat al
+
+Last login time: 4/20/2026 16:28:49
+Unsuccessful login attempts since last login: 1
+
+[2026-04-20 18:28:50] [INFO] Zet MTU 1500 op broadcast domain bd_cifs
+[2026-04-20 18:28:52] [INFO] Broadcast domain bd_cifs bestaat al
+
+Last login time: 4/20/2026 16:28:53
+Unsuccessful login attempts since last login: 1
+
+[2026-04-20 18:28:55] [INFO] Maak broadcast domain bd_vlan20
+
+Last login time: 4/20/2026 16:28:56
+Unsuccessful login attempts since last login: 1
+
+Error: invalid argument "-rootvolume-aggregate"
+
+[2026-04-20 18:28:57] [ERROR] Mislukt: Maak vserver svm_cifs01 (cifs)

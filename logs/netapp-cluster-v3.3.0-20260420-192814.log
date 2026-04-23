@@ -1,0 +1,27 @@
+[2026-04-20 19:28:14] [INFO] ==============================
+[2026-04-20 19:28:14] [INFO] Start inrichting NetApp cluster 192.168.1.22
+[2026-04-20 19:28:14] [INFO] Versie:        v3.3.0 (2026-04-16)
+[2026-04-20 19:28:14] [INFO] Config:        setup_ontap_2node_cluster.conf
+[2026-04-20 19:28:14] [INFO] Log file:      ./logs/netapp-cluster-v3.3.0-20260420-192814.log
+[2026-04-20 19:28:14] [INFO] Verbose:       0 | Dry-run: 0 | Color: auto
+[2026-04-20 19:28:14] [INFO] User:          admin
+[2026-04-20 19:28:14] [INFO] Nodes:         lab-clus01-01 lab-clus01-02
+[2026-04-20 19:28:14] [INFO] RAID type:     raid_dp | Disks: 8 | Spare reserve: 1
+[2026-04-20 19:28:14] [INFO] ==============================
+[2026-04-20 19:28:18] [INFO] Controleer SSH-verbinding naar admin@192.168.1.22 ...
+[2026-04-20 19:28:18] [INFO] Key-based authenticatie niet beschikbaar, probeer wachtwoord...
+[2026-04-20 19:28:18] [INFO] SSH-verbinding succesvol (sshpass wachtwoordauth).
+[2026-04-20 19:28:19] [INFO] NTP server 192.168.1.1 bestaat al
+[2026-04-20 19:28:20] [DEBUG] Raw spare disks output for lab-clus01-01: |Last login time: 4/20/2026 17:28:19|Unsuccessful login attempts since last login: 1|                                                                                           Usable           Disk    Container   Container|Disk                   Size Shelf Bay Type    Type        Name      Owner|---------------- ---------- ----- --- ------- ----------- --------- --------|NET-1.11             1020MB     -  19 FCAL    spare       Pool0     lab-clus01-01|NET-1.13             1020MB     -  20 FCAL    spare       Pool0     lab-clus01-01|NET-1.15             1020MB     -  21 FCAL    spare       Pool0     lab-clus01-01|NET-1.17             1020MB     -  22 FCAL    spare       Pool0     lab-clus01-01|
+[2026-04-20 19:28:20] [INFO] Node lab-clus01-01: 11 spare disks beschikbaar (nodig: 8 + 1 reserve = 9)
+
+Last login time: 4/20/2026 17:28:20
+Unsuccessful login attempts since last login: 1
+[Job 78] Job is queued: Create aggr_data_lab_clus01_01.                        [Job 78] Job is queued: Create aggr_data_lab_clus01_01.                        [Job 78] creating aggregate aggr_data_lab_clus01_01 ...                        [Job 78] Job succeeded: DONE                                                   
+
+[2026-04-20 19:28:25] [INFO] Maak data aggregate aggr_data_lab_clus01_01 op lab-clus01-01 (11 spare, 1 reserve aangehouden)
+[2026-04-20 19:28:26] [DEBUG] Raw spare disks output for lab-clus01-02: |Last login time: 4/20/2026 17:28:26|Unsuccessful login attempts since last login: 1|                                                                                           Usable           Disk    Container   Container|Disk                   Size Shelf Bay Type    Type        Name      Owner|---------------- ---------- ----- --- ------- ----------- --------- --------|NET-2.11             1020MB     -  19 FCAL    spare       Pool0     lab-clus01-02|NET-2.13             1020MB     -  20 FCAL    spare       Pool0     lab-clus01-02|NET-2.15             1020MB     -  21 FCAL    spare       Pool0     lab-clus01-02|NET-2.17             1020MB     -  22 FCAL    spare       Pool0     lab-clus01-02|
+[2026-04-20 19:28:26] [INFO] Node lab-clus01-02: 11 spare disks beschikbaar (nodig: 8 + 1 reserve = 9)
+Permission denied, please try again.
+Received disconnect from 192.168.1.22 port 22:2: Too many authentication failures
+[2026-04-20 19:28:46] [ERROR] Mislukt: Maak data aggregate aggr_data_lab_clus01_02 op lab-clus01-02 (11 spare, 1 reserve aangehouden)
