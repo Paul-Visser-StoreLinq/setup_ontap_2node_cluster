@@ -178,6 +178,7 @@ setup_colors
 : "${NFS_ISCSI_START_IP:?NFS_ISCSI_START_IP ontbreekt in config}"
 : "${LIF_NETMASK_CIFS:?LIF_NETMASK_CIFS ontbreekt in config}"
 : "${LIF_NETMASK_NFS_ISCSI:?LIF_NETMASK_NFS_ISCSI ontbreekt in config}"
+: "${EXCLUDED_IPS:=()}"
 : "${VOL_PREFIX:=vol}"
 : "${VOLUMES_PER_SVM:=2}"
 : "${VOL_SIZE:=100G}"
@@ -350,6 +351,33 @@ next_ip() {
     $(( (num >> 16) & 255 )) \
     $(( (num >>  8) & 255 )) \
     $(( num & 255 ))
+}
+
+next_available_ip() {
+  local base_ip="$1" offset="$2"
+  local candidate_ip current_offset="$offset"
+
+  while true; do
+    candidate_ip="$(next_ip "$base_ip" "$current_offset")"
+
+    # Controleer of deze IP in de uitsluitingslijst staat
+    local is_excluded=0
+    for excluded_ip in "${EXCLUDED_IPS[@]}"; do
+      if [[ "$candidate_ip" == "$excluded_ip" ]]; then
+        is_excluded=1
+        break
+      fi
+    done
+
+    # Als niet uitgesloten, gebruik deze IP
+    if [[ $is_excluded -eq 0 ]]; then
+      printf '%s\n' "$candidate_ip"
+      return 0
+    fi
+
+    # Anders, probeer de volgende IP
+    current_offset=$((current_offset + 1))
+  done
 }
 
 find_available_vserver_name() {
@@ -616,7 +644,7 @@ ensure_lifs_for_cifs() {
   local svm="$1" offset_base="${2:-0}" i=0
   for node in "${NODES[@]}"; do
     local lif="lif_cifs_${node//-/_}" ip
-    ip="$(next_ip "$CIFS_START_IP" $((offset_base + i)))"
+    ip="$(next_available_ip "$CIFS_START_IP" $((offset_base + i)))"
     if exists_cmd "network interface show -vserver ${svm} -lif ${lif}"; then
       log "INFO" "LIF ${svm}:${lif} bestaat al"
       record_skipped
@@ -634,7 +662,7 @@ ensure_lifs_for_vlan20_svm() {
   local svm="$1" lif_prefix="$2" offset_base="${3:-0}" i=0 vlan_port="${VLAN20_BASE_PORT}-${VLAN_ID}"
   for node in "${NODES[@]}"; do
     local lif="${lif_prefix}_${node//-/_}" ip
-    ip="$(next_ip "$NFS_ISCSI_START_IP" $((offset_base + i)))"
+    ip="$(next_available_ip "$NFS_ISCSI_START_IP" $((offset_base + i)))"
     if exists_cmd "network interface show -vserver ${svm} -lif ${lif}"; then
       log "INFO" "LIF ${svm}:${lif} bestaat al"
       record_skipped
