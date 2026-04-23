@@ -1,0 +1,114 @@
+[2026-04-23 15:37:45] [INFO] ==============================
+[2026-04-23 15:37:45] [INFO] Start inrichting NetApp cluster 192.168.1.22
+[2026-04-23 15:37:45] [INFO] Versie:        v3.3.0 (2026-04-16)
+[2026-04-23 15:37:45] [INFO] Config:        setup_ontap_2node_cluster.conf
+[2026-04-23 15:37:45] [INFO] Log file:      ./logs/netapp-cluster-v3.3.0-20260423-153744.log
+[2026-04-23 15:37:45] [INFO] Verbose:       0 | Dry-run: 0 | Color: auto
+[2026-04-23 15:37:45] [INFO] User:          admin
+[2026-04-23 15:37:45] [INFO] Nodes:         lab-clus01-01 lab-clus01-02
+[2026-04-23 15:37:45] [INFO] RAID type:     raid_dp | Disks: 8 | Spare reserve: 1
+[2026-04-23 15:37:45] [INFO] ==============================
+[2026-04-23 15:37:49] [INFO] Controleer SSH-verbinding naar admin@192.168.1.22 ...
+[2026-04-23 15:37:50] [INFO] Key-based authenticatie niet beschikbaar, probeer wachtwoord...
+[2026-04-23 15:37:50] [INFO] SSH-verbinding succesvol (sshpass wachtwoordauth).
+[2026-04-23 15:37:51] [INFO] NTP server 192.168.1.1 bestaat al
+[2026-04-23 15:37:52] [INFO] Data aggregate aggr_data_lab_clus01_01 bestaat al
+[2026-04-23 15:37:52] [INFO] Data aggregate aggr_data_lab_clus01_02 bestaat al
+[2026-04-23 15:37:53] [INFO] IPspace ipspace_data bestaat al
+[2026-04-23 15:37:54] [INFO] VLAN port lab-clus01-01:e0d-20 bestaat al
+[2026-04-23 15:37:55] [INFO] VLAN port lab-clus01-02:e0d-20 bestaat al
+
+Last login time: 4/23/2026 13:37:56
+Unsuccessful login attempts since last login: 1
+
+[2026-04-23 15:37:57] [INFO] Zet MTU 1500 op broadcast domain bd_cifs
+
+Last login time: 4/23/2026 13:37:57
+Unsuccessful login attempts since last login: 1
+
+[2026-04-23 15:37:58] [INFO] Zet MTU 9000 op broadcast domain bd_vlan20
+[2026-04-23 15:38:00] [INFO] Broadcast domain bd_cifs bestaat al
+[2026-04-23 15:38:02] [INFO] Broadcast domain bd_vlan20 bestaat al
+
+Last login time: 4/23/2026 13:38:03
+Unsuccessful login attempts since last login: 1
+[Job 197] Job is queued: Create svm_cifs01.                                    [Job 197] Job is queued: Create svm_cifs01.                                    [Job 197] Job is queued: Create svm_cifs01.                                    [Job 197] Job is queued: Create svm_cifs01.                                    [Job 197]                                                                      [Job 197] Job succeeded:                                                       
+Vserver creation completed.
+
+[2026-04-23 15:38:10] [INFO] Maak vserver svm_cifs01 (cifs)
+
+Last login time: 4/23/2026 13:38:03
+Unsuccessful login attempts since last login: 1
+
+[2026-04-23 15:38:11] [INFO] Enable protocols cifs voor svm_cifs01
+
+Last login time: 4/23/2026 13:38:12
+Unsuccessful login attempts since last login: 1
+[Job 198] Job is queued: Create svm_nfs01.                                     [Job 198] Job is queued: Create svm_nfs01.                                     [Job 198] Job is queued: Create svm_nfs01.                                     [Job 198] Job is queued: Create svm_nfs01.                                     [Job 198] Job is queued: Create svm_nfs01.                                     [Job 198] Job is queued: Create svm_nfs01.                                     [Job 198]                                                                      [Job 198] Job succeeded:                                                       
+Vserver creation completed.
+
+[2026-04-23 15:38:20] [INFO] Maak vserver svm_nfs01 (nfs)
+
+Last login time: 4/23/2026 13:38:12
+Unsuccessful login attempts since last login: 1
+
+[2026-04-23 15:38:20] [INFO] Enable protocols nfs voor svm_nfs01
+
+Last login time: 4/23/2026 13:38:21
+Unsuccessful login attempts since last login: 1
+[Job 199] Job is queued: Create svm_iscsi01.                                   [Job 199]                                                                      [Job 199] Job succeeded:                                                       
+Vserver creation completed.
+
+[2026-04-23 15:38:24] [INFO] Maak vserver svm_iscsi01 (iscsi)
+
+Last login time: 4/23/2026 13:38:22
+Unsuccessful login attempts since last login: 1
+
+[2026-04-23 15:38:25] [INFO] Enable protocols iscsi voor svm_iscsi01
+
+Last login time: 4/23/2026 13:38:26
+Unsuccessful login attempts since last login: 1
+
+[2026-04-23 15:38:27] [INFO] Maak export policy exp_svm_cifs01
+
+Last login time: 4/23/2026 13:38:27
+Unsuccessful login attempts since last login: 1
+
+[2026-04-23 15:38:27] [INFO] Maak export policy rule voor exp_svm_cifs01
+
+Last login time: 4/23/2026 13:38:28
+Unsuccessful login attempts since last login: 1
+
+[2026-04-23 15:38:28] [INFO] Maak export policy exp_svm_nfs01
+
+Last login time: 4/23/2026 13:38:28
+Unsuccessful login attempts since last login: 1
+
+[2026-04-23 15:38:29] [INFO] Maak export policy rule voor exp_svm_nfs01
+[2026-04-23 15:38:29] [DEBUG] next_available_ip called with base_ip=192.168.1.25, offset=0
+[2026-04-23 15:38:29] [DEBUG] EXCLUDED_IPS has 1 elements
+[2026-04-23 15:38:29] [DEBUG] EXCLUDED_IPS[0] = '192.168.1.25'
+[2026-04-23 15:38:29] [DEBUG] IP 192.168.1.25 is excluded, trying next
+[2026-04-23 15:38:30] [DEBUG] Using available IP: 192.168.1.26
+
+Last login time: 4/23/2026 13:38:30
+Unsuccessful login attempts since last login: 1
+
+Warning: The configured failover-group has no valid failover targets for the
+         LIF's failover-policy. To view the failover targets for a LIF, use the
+         "network interface show -failover" command.
+
+[2026-04-23 15:38:31] [INFO] Maak CIFS LIF svm_cifs01:lif_cifs_lab_clus01_01 met IP 192.168.1.26
+[2026-04-23 15:38:33] [DEBUG] next_available_ip called with base_ip=192.168.1.25, offset=1
+[2026-04-23 15:38:33] [DEBUG] EXCLUDED_IPS has 1 elements
+[2026-04-23 15:38:33] [DEBUG] EXCLUDED_IPS[0] = '192.168.1.25'
+[2026-04-23 15:38:34] [DEBUG] IP 192.168.1.26 is already in use, trying next
+[2026-04-23 15:38:35] [DEBUG] Using available IP: 192.168.1.27
+
+Last login time: 4/23/2026 13:38:36
+Unsuccessful login attempts since last login: 1
+
+Error: command failed: The specified port, node lab-clus01-02 port e0e, is not
+       in the same IPspace as vserver svm_cifs01.
+
+[2026-04-23 15:38:36] [ERROR] Mislukt: Maak CIFS LIF svm_cifs01:lif_cifs_lab_clus01_02 met IP 192.168.1.27

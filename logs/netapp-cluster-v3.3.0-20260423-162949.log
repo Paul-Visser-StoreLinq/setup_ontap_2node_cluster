@@ -1,0 +1,72 @@
+[2026-04-23 16:29:49] [INFO] ==============================
+[2026-04-23 16:29:49] [INFO] Start inrichting NetApp cluster 192.168.1.22
+[2026-04-23 16:29:49] [INFO] Versie:        v3.3.0 (2026-04-16)
+[2026-04-23 16:29:49] [INFO] Config:        setup_ontap_2node_cluster.conf
+[2026-04-23 16:29:49] [INFO] Log file:      ./logs/netapp-cluster-v3.3.0-20260423-162949.log
+[2026-04-23 16:29:49] [INFO] Verbose:       0 | Dry-run: 0 | Color: auto
+[2026-04-23 16:29:49] [INFO] User:          admin
+[2026-04-23 16:29:49] [INFO] Nodes:         lab-clus01-01 lab-clus01-02
+[2026-04-23 16:29:49] [INFO] RAID type:     raid_dp | Disks: 8 | Spare reserve: 1
+[2026-04-23 16:29:49] [INFO] ==============================
+[2026-04-23 16:29:53] [INFO] Controleer SSH-verbinding naar admin@192.168.1.22 ...
+[2026-04-23 16:29:53] [INFO] Key-based authenticatie niet beschikbaar, probeer wachtwoord...
+[2026-04-23 16:29:54] [INFO] SSH-verbinding succesvol (sshpass wachtwoordauth).
+[2026-04-23 16:29:56] [INFO] NTP server 192.168.1.1 bestaat al
+[2026-04-23 16:29:57] [INFO] Data aggregate aggr_data_lab_clus01_01 bestaat al
+[2026-04-23 16:29:58] [INFO] Data aggregate aggr_data_lab_clus01_02 bestaat al
+[2026-04-23 16:29:58] [INFO] IPspace ipspace_data bestaat al
+[2026-04-23 16:30:00] [INFO] VLAN port lab-clus01-01:e0d-20 bestaat al
+[2026-04-23 16:30:01] [INFO] VLAN port lab-clus01-02:e0d-20 bestaat al
+[2026-04-23 16:30:02] [INFO] Zet MTU 1500 op broadcast domain bd_cifs
+[2026-04-23 16:30:04] [INFO] Zet MTU 9000 op broadcast domain bd_vlan20
+[2026-04-23 16:30:06] [INFO] Broadcast domain bd_cifs bestaat al
+[2026-04-23 16:30:08] [INFO] Broadcast domain bd_vlan20 bestaat al
+[2026-04-23 16:30:15] [INFO] Maak vserver svm_cifs04 (cifs)
+[2026-04-23 16:30:15] [INFO] Enable protocols cifs voor svm_cifs04
+[2026-04-23 16:30:24] [INFO] Maak vserver svm_nfs04 (nfs)
+[2026-04-23 16:30:25] [INFO] Enable protocols nfs voor svm_nfs04
+[2026-04-23 16:30:35] [INFO] Maak vserver svm_iscsi04 (iscsi)
+[2026-04-23 16:30:36] [INFO] Enable protocols iscsi voor svm_iscsi04
+[2026-04-23 16:30:37] [INFO] Maak export policy exp_svm_cifs04
+[2026-04-23 16:30:38] [INFO] Maak export policy rule voor exp_svm_cifs04
+[2026-04-23 16:30:39] [INFO] Maak export policy exp_svm_nfs04
+[2026-04-23 16:30:39] [INFO] Maak export policy rule voor exp_svm_nfs04
+[2026-04-23 16:30:41] [DEBUG] next_available_ip called with base_ip=192.168.1.25, offset=0
+[2026-04-23 16:30:41] [DEBUG] EXCLUDED_IPS has 1 elements
+[2026-04-23 16:30:41] [DEBUG] EXCLUDED_IPS[0] = '192.168.1.25'
+[2026-04-23 16:30:41] [DEBUG] IP 192.168.1.25 is excluded, trying next
+[2026-04-23 16:30:42] [DEBUG] Checking if IP 192.168.1.26 is used, result: |Last login time: 4/23/2026 14:30:41|Unsuccessful login attempts since last login: 1|
+[2026-04-23 16:30:42] [DEBUG] IP 192.168.1.26 is already in use, trying next
+[2026-04-23 16:30:42] [DEBUG] Checking if IP 192.168.1.27 is used, result: |Last login time: 4/23/2026 14:30:41|Unsuccessful login attempts since last login: 1|
+[2026-04-23 16:30:42] [DEBUG] IP 192.168.1.27 is already in use, trying next
+[2026-04-23 16:30:43] [DEBUG] Checking if IP 192.168.1.28 is used, result: |Last login time: 4/23/2026 14:30:42|Unsuccessful login attempts since last login: 1|
+[2026-04-23 16:30:43] [DEBUG] IP 192.168.1.28 is already in use, trying next
+[2026-04-23 16:30:44] [DEBUG] Checking if IP 192.168.1.29 is used, result: |Last login time: 4/23/2026 14:30:43|Unsuccessful login attempts since last login: 1|
+[2026-04-23 16:30:44] [DEBUG] Using available IP: 192.168.1.29
+[2026-04-23 16:30:45] [DEBUG] Creating CIFS LIF svm_cifs04:lif_cifs_lab_clus01_01 with IP 192.168.1.29 on port e0e for node lab-clus01-01
+[2026-04-23 16:30:46] [INFO] Maak CIFS LIF svm_cifs04:lif_cifs_lab_clus01_01 met IP 192.168.1.29
+[2026-04-23 16:30:49] [ERROR] Port e0e op node lab-clus01-02 zit niet in broadcast domain bd_cifs. Controleer de configuratie.
+[2026-04-23 16:30:49] [DEBUG] next_available_ip called with base_ip=192.168.20.25, offset=0
+[2026-04-23 16:30:49] [DEBUG] EXCLUDED_IPS has 1 elements
+[2026-04-23 16:30:49] [DEBUG] EXCLUDED_IPS[0] = '192.168.1.25'
+[2026-04-23 16:30:50] [DEBUG] Checking if IP 192.168.20.25 is used, result: |Last login time: 4/23/2026 14:30:49|Unsuccessful login attempts since last login: 1|
+[2026-04-23 16:30:50] [DEBUG] IP 192.168.20.25 is already in use, trying next
+[2026-04-23 16:30:51] [DEBUG] Checking if IP 192.168.20.26 is used, result: |Last login time: 4/23/2026 14:30:50|Unsuccessful login attempts since last login: 1|
+[2026-04-23 16:30:51] [DEBUG] Using available IP: 192.168.20.26
+[2026-04-23 16:30:52] [INFO] Maak VLAN20 LIF svm_nfs04:lif_nfs_lab_clus01_01 met IP 192.168.20.26
+[2026-04-23 16:30:54] [DEBUG] next_available_ip called with base_ip=192.168.20.25, offset=1
+[2026-04-23 16:30:54] [DEBUG] EXCLUDED_IPS has 1 elements
+[2026-04-23 16:30:54] [DEBUG] EXCLUDED_IPS[0] = '192.168.1.25'
+[2026-04-23 16:30:55] [DEBUG] Checking if IP 192.168.20.26 is used, result: |Last login time: 4/23/2026 14:30:52|Unsuccessful login attempts since last login: 1|
+[2026-04-23 16:30:55] [DEBUG] IP 192.168.20.26 is already in use, trying next
+[2026-04-23 16:30:56] [DEBUG] Checking if IP 192.168.20.27 is used, result: |Last login time: 4/23/2026 14:30:55|Unsuccessful login attempts since last login: 1|
+[2026-04-23 16:30:56] [DEBUG] Using available IP: 192.168.20.27
+[2026-04-23 16:30:57] [ERROR] Mislukt: Maak VLAN20 LIF svm_nfs04:lif_nfs_lab_clus01_02 met IP 192.168.20.27
+[2026-04-23 16:30:57] [DEBUG] ONTAP command failed: network interface create -vserver svm_nfs04 -lif lif_nfs_lab_clus01_02 -service-policy default-data-files -home-node lab-clus01-02 -home-port e0d-20 -address 192.168.20.27 -netmask 255.255.255.0
+[2026-04-23 16:30:57] [DEBUG] ONTAP error output: 
+Last login time: 4/23/2026 14:30:56
+Unsuccessful login attempts since last login: 1
+
+Error: command failed: The specified port, node lab-clus01-02 port e0d-20, is
+       not in the same IPspace as vserver svm_nfs04.
+

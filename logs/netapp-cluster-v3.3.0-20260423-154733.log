@@ -1,0 +1,10 @@
+[2026-04-23 15:47:33] [INFO] ==============================
+[2026-04-23 15:47:33] [INFO] Start inrichting NetApp cluster 192.168.1.22
+[2026-04-23 15:47:33] [INFO] Versie:        v3.3.0 (2026-04-16)
+[2026-04-23 15:47:33] [INFO] Config:        setup_ontap_2node_cluster.conf
+[2026-04-23 15:47:33] [INFO] Log file:      ./logs/netapp-cluster-v3.3.0-20260423-154733.log
+[2026-04-23 15:47:33] [INFO] Verbose:       0 | Dry-run: 0 | Color: auto
+[2026-04-23 15:47:33] [INFO] User:          admin
+[2026-04-23 15:47:33] [INFO] Nodes:         lab-clus01-01 lab-clus01-02
+[2026-04-23 15:47:33] [INFO] RAID type:     raid_dp | Disks: 8 | Spare reserve: 1
+[2026-04-23 15:47:33] [INFO] ==============================

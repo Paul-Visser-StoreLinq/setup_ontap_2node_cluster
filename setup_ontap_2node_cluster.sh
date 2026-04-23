@@ -1,34 +1,20 @@
 #!/usr/bin/env bash
 # ==============================================================================
 # netapp-2node-setup.sh
-# Configureert een NetApp ONTAP 2-node cluster via SSH (ONTAP CLI).
+# Configures a NetApp ONTAP 2-node cluster via SSH (ONTAP CLI).
 #
-# VERSIE BEHEER
+# VERSION HISTORY
 # ------------------------------------------------------------------------------
-# v3.3.0  2026-04-16  Config/script variabelenamen gesynchroniseerd:
-#                       - SSH_USER  → NETAPP_USER (beide worden nu ondersteund)
-#                       - NTP_SERVERS (array) → correct verwerkt, alle servers
-#                       - COLOR_OUTPUT → COLOR_MODE (beide worden ondersteund)
-#                     AGGR_RAIDTYPE toegevoegd aan aggregate create commando
-#                     AGGR_SPARE_RESERVE: spare-disk check houdt reserve aan
-#                     NTP_VERSION verwijderd uit config (niet relevant voor ONTAP)
-#                     Versie-beheer changelog toegevoegd bovenaan script
-# v3.2.9  2026-04-16  FIX dry-run loop: find_available_vserver_name keert
-#                     direct terug in dry-run (SSH-fout werd als "bestaat" gezien)
-# v3.2.8  2026-04-16  FIX vserver naamgeneratie: regex ^(.*[^0-9])([0-9]+)$
-#                     zodat next_num suffix correct vervangt (was: plakte erachter)
-# v3.2.7  2026-04-16  FIX iSCSI export policy aanroep verwijderd
-#                     FIX ensure_volumes: round-robin aggregate verdeling
-#                     FIX build_ports: ${out[@]} i.p.v. ${out[*]}
-#                     FIX run_remote: debug label "READ" → "RUN"
-#                     FIX log SUMMARY: naar stdout i.p.v. stderr
-#                     Toevoeging: SSH-connectiviteitscheck bij opstarten
-# v3.2.6  (origineel)
+# v3.4.0  2026-04-20  Removed IPspace: always uses Default ipspace
+#                     No new vserver created if one for that protocol exists
+#                     Removed unused variables and functions
+# v3.3.0  2026-04-16  Synchronized config/script variable names
+# v3.2.6  (original)
 # ==============================================================================
 set -euo pipefail
 
-SCRIPT_VERSION="v3.3.0"
-SCRIPT_DATE="2026-04-16"
+SCRIPT_VERSION="v3.4.0"
+SCRIPT_DATE="2026-04-20"
 
 # =========================
 # Defaults
@@ -45,10 +31,10 @@ SKIPPED_COUNT=0
 WARN_COUNT=0
 FAILED_COUNT=0
 
-# Globale terugkeerwaarde voor ensure_vserver()
+# Global return value for ensure_vserver()
 SVM_RESULT=""
 
-# SSH auth modus: 0=interactief/key, 1=sshpass
+# SSH auth mode: 0=interactive/key, 1=sshpass
 SSH_USE_SSHPASS=0
 
 # =========================
@@ -82,7 +68,7 @@ log() {
   case "$level" in
     INFO|WARN|ERROR|DEBUG|DRYRUN) ;;
     SUMMARY)
-      # SUMMARY gaat naar stdout zodat het apart te pipen/capturen is
+      # SUMMARY goes to stdout so it can be piped/captured separately
       printf '[%s] [%s] %s\n' "$ts" "$level" "$msg" | tee -a "$LOG_FILE"
       return 0
       ;;
@@ -100,7 +86,7 @@ usage() {
   cat <<USAGE
 Usage: $(basename "$0") [--config FILE] [--dry-run] [--verbose] [--color auto|always|never]
 
-Versie: ${SCRIPT_VERSION} (${SCRIPT_DATE})
+Version: ${SCRIPT_VERSION} (${SCRIPT_DATE})
 
 Options:
   --config FILE   Config file to source
@@ -109,9 +95,9 @@ Options:
   --color MODE    auto|always|never
   -h, --help      Show this help
 
-Vereisten:
-  - SSH key-based authenticatie naar NETAPP_USER@CLUSTER_MGMT_IP
-  - python3 beschikbaar op het lokale systeem
+Requirements:
+  - SSH key-based authentication to NETAPP_USER@CLUSTER_MGMT_IP
+  - python3 available on the local system
 USAGE
 }
 
@@ -139,8 +125,13 @@ done
 # shellcheck disable=SC1090
 source "$CONFIG_FILE"
 
+# Parse EXCLUDED_IPS from comma-separated string to array
+if [[ -n "${EXCLUDED_IPS:-}" ]]; then
+  IFS=',' read -ra EXCLUDED_IPS <<< "$EXCLUDED_IPS"
+fi
+
 # --- Config alias: COLOR_OUTPUT (config) → COLOR_MODE (script) ---
-# Ondersteun beide namen zodat de config-waarde COLOR_OUTPUT ook werkt
+# Support both names so the config value COLOR_OUTPUT also works
 if [[ -n "${COLOR_OUTPUT:-}" && "${COLOR_MODE}" == "auto" ]]; then
   COLOR_MODE="$COLOR_OUTPUT"
 fi
@@ -150,11 +141,10 @@ LOG_FILE="${LOG_DIR}/netapp-cluster-${SCRIPT_VERSION}-$(date +%Y%m%d-%H%M%S).log
 setup_colors
 
 # =========================
-# Valideer config variabelen
+# Validate config variables
 # =========================
-: "${CLUSTER_MGMT_IP:?CLUSTER_MGMT_IP ontbreekt in config}"
-: "${NODES:?NODES ontbreekt in config}"
-: "${IPSPACE_NAME:=ipspace_data}"
+: "${CLUSTER_MGMT_IP:?CLUSTER_MGMT_IP missing in config}"
+: "${NODES:?NODES missing in config}"
 : "${AGGR_PREFIX:=aggr_data}"
 : "${AGGR_DISKCOUNT:=8}"
 : "${AGGR_RAIDTYPE:=raid_dp}"
@@ -172,13 +162,11 @@ setup_colors
 : "${NFS_ISCSI_MTU:=9000}"
 : "${BROADCAST_DOMAIN_CIFS:=bd_cifs}"
 : "${BROADCAST_DOMAIN_VLAN20:=bd_vlan20}"
-: "${FAILOVER_GROUP_CIFS:=fg_cifs}"
-: "${FAILOVER_GROUP_VLAN20:=fg_vlan20}"
-: "${CIFS_START_IP:?CIFS_START_IP ontbreekt in config}"
-: "${NFS_ISCSI_START_IP:?NFS_ISCSI_START_IP ontbreekt in config}"
-: "${LIF_NETMASK_CIFS:?LIF_NETMASK_CIFS ontbreekt in config}"
-: "${LIF_NETMASK_NFS_ISCSI:?LIF_NETMASK_NFS_ISCSI ontbreekt in config}"
-: "${EXCLUDED_IPS:=()}"
+: "${CIFS_START_IP:?CIFS_START_IP missing in config}"
+: "${NFS_ISCSI_START_IP:?NFS_ISCSI_START_IP missing in config}"
+: "${LIF_NETMASK_CIFS:?LIF_NETMASK_CIFS missing in config}"
+: "${LIF_NETMASK_NFS_ISCSI:?LIF_NETMASK_NFS_ISCSI missing in config}"
+: "${EXCLUDED_IPS:=}"
 : "${VOL_PREFIX:=vol}"
 : "${VOLUMES_PER_SVM:=2}"
 : "${VOL_SIZE:=100G}"
@@ -187,89 +175,95 @@ setup_colors
 : "${EXPORT_RORULE:=any}"
 : "${EXPORT_RWRULE:=any}"
 
-# --- NETAPP_USER: config gebruikt SSH_USER, script gebruikt NETAPP_USER ---
-# Ondersteun beide; SSH_USER heeft voorrang als NETAPP_USER niet gezet is.
+# --- NETAPP_USER: config may use SSH_USER, script uses NETAPP_USER ---
+# Support both; SSH_USER is used as fallback if NETAPP_USER is not set.
 if [[ -z "${NETAPP_USER:-}" ]]; then
   NETAPP_USER="${SSH_USER:-admin}"
 fi
 
-# --- NTP: config gebruikt NTP_SERVERS (array), voor compatibiliteit ook NTP_SERVER ---
+# --- NTP: config uses NTP_SERVERS (array), NTP_SERVER for compatibility ---
 if [[ -z "${NTP_SERVER:-}" ]]; then
   NTP_SERVER="${NTP_SERVERS[0]:-}"
+fi
+
+# Normalize excluded IPs so config can use array or comma-separated string
+if [[ -n "${EXCLUDED_IPS:-}" ]]; then
+  if ! declare -p EXCLUDED_IPS 2>/dev/null | grep -q 'declare -a'; then
+    IFS=', ' read -ra EXCLUDED_IPS <<< "${EXCLUDED_IPS}"
+  fi
 fi
 
 # =========================
 # SSH helpers
 # =========================
-# Basisopties zonder BatchMode zodat wachtwoordauth ook werkt.
-# BatchMode=yes wordt eerst geprobeerd (key-auth); bij falen wordt
-# opnieuw verbonden zonder BatchMode zodat SSH om een wachtwoord kan vragen.
+# Base options without BatchMode so password auth also works.
+# BatchMode=yes is tried first (key-auth); on failure reconnects
+# without BatchMode so SSH can prompt for a password.
 SSH_OPTS=(-T -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=20 -o ServerAliveInterval=30 -o LogLevel=ERROR)
 SSH_OPTS_BATCH=("${SSH_OPTS[@]}" -o BatchMode=yes)
 
 check_ssh_connectivity() {
-  log "INFO" "Controleer SSH-verbinding naar ${NETAPP_USER}@${CLUSTER_MGMT_IP} ..."
+  log "INFO" "Checking SSH connection to ${NETAPP_USER}@${CLUSTER_MGMT_IP} ..."
 
-  # Probeer eerst key-based auth (geen interactie)
+  # Try key-based auth first (no interaction)
   if ssh "${SSH_OPTS_BATCH[@]}" "${NETAPP_USER}@${CLUSTER_MGMT_IP}" "version" >/dev/null 2>&1; then
-    log "INFO" "SSH-verbinding succesvol (key-based authenticatie)."
+    log "INFO" "SSH connection successful (key-based authentication)."
     return 0
   fi
 
-  # Key-auth mislukt: probeer wachtwoord via sshpass
-  log "INFO" "Key-based authenticatie niet beschikbaar, probeer wachtwoord..."
+  # Key-auth failed: try password via sshpass
+  log "INFO" "Key-based authentication not available, trying password..."
 
-  # Probeer sshpass te installeren als niet beschikbaar
+  # Try to install sshpass if not available
   if ! command -v sshpass >/dev/null 2>&1; then
-    log "INFO" "sshpass niet beschikbaar."
-    echo -n "Wil je sshpass installeren met brew? (y/n): "
+    log "INFO" "sshpass not available."
+    echo -n "Install sshpass with brew? (y/n): "
     read -r response
     if [[ "$response" =~ ^[Yy]$ ]]; then
       if command -v brew >/dev/null 2>&1; then
-        log "INFO" "Installeer sshpass..."
+        log "INFO" "Installing sshpass..."
         if brew install hudochenkov/sshpass/sshpass; then
-          log "INFO" "sshpass succesvol geïnstalleerd."
+          log "INFO" "sshpass installed successfully."
         else
-          log "WARN" "Kon sshpass niet installeren."
+          log "WARN" "Could not install sshpass."
         fi
       else
-        log "WARN" "brew niet beschikbaar, kan sshpass niet installeren."
+        log "WARN" "brew not available, cannot install sshpass."
       fi
     else
-      log "INFO" "sshpass installatie overgeslagen."
+      log "INFO" "sshpass installation skipped."
     fi
   fi
 
   if command -v sshpass >/dev/null 2>&1 && [[ -n "${NETAPP_PASSWORD:-}" ]]; then
     export SSHPASS="$NETAPP_PASSWORD"
-    # sshpass beschikbaar en wachtwoord in omgevingsvariabele NETAPP_PASSWORD
+    # sshpass available and password set via NETAPP_PASSWORD environment variable
     if sshpass -e ssh "${SSH_OPTS[@]}" "${NETAPP_USER}@${CLUSTER_MGMT_IP}" "version" >/dev/null 2>&1; then
-      log "INFO" "SSH-verbinding succesvol (sshpass wachtwoordauth)."
-      # Herdefinieer run-functies om sshpass te gebruiken
+      log "INFO" "SSH connection successful (sshpass password auth)."
       SSH_USE_SSHPASS=1
       return 0
     else
-      log "ERROR" "SSH-verbinding mislukt met sshpass. Controleer NETAPP_PASSWORD."
+      log "ERROR" "SSH connection failed with sshpass. Check NETAPP_PASSWORD."
       exit 1
     fi
   fi
 
-  # Geen sshpass: maak interactieve verbinding mogelijk
-  log "INFO" "Geen sshpass of NETAPP_PASSWORD gevonden."
-  log "INFO" "SSH zal interactief om een wachtwoord vragen bij elke opdracht."
-  log "WARN" "Tip: exporteer NETAPP_PASSWORD en installeer sshpass voor automatisering."
+  # No sshpass: allow interactive connection
+  log "INFO" "No sshpass or NETAPP_PASSWORD found."
+  log "INFO" "SSH will interactively prompt for a password on each command."
+  log "WARN" "Tip: export NETAPP_PASSWORD and install sshpass for automation."
   SSH_USE_SSHPASS=0
 
-  # Test of verbinding überhaupt mogelijk is (interactief)
+  # Test whether connection is possible at all (interactive)
   if ! ssh "${SSH_OPTS[@]}" "${NETAPP_USER}@${CLUSTER_MGMT_IP}" "version" >/dev/null; then
-    log "ERROR" "SSH-verbinding mislukt naar ${CLUSTER_MGMT_IP} als gebruiker ${NETAPP_USER}."
+    log "ERROR" "SSH connection failed to ${CLUSTER_MGMT_IP} as user ${NETAPP_USER}."
     exit 1
   fi
-  log "INFO" "SSH-verbinding succesvol (wachtwoord)."
+  log "INFO" "SSH connection successful (password)."
 }
 
 _ssh_exec() {
-  # Centrale SSH-uitvoerfunctie: kiest automatisch key-, sshpass- of wachtwoordauth
+  # Central SSH execution function: automatically selects key-, sshpass- or password auth
   if [[ "${SSH_USE_SSHPASS:-0}" -eq 1 ]]; then
     sshpass -e ssh "${SSH_OPTS[@]}" "${NETAPP_USER}@${CLUSTER_MGMT_IP}" "$@"
   else
@@ -294,7 +288,8 @@ run_write() {
 
 safe_change() {
   local desc="$1" cmd="$2"
-  if run_write "$cmd" >>"$LOG_FILE" 2>&1; then
+  local output
+  if output="$(run_write "$cmd" 2>&1)" && [[ $? -eq 0 ]]; then
     if [[ "$DRY_RUN" -eq 1 ]]; then
       log "INFO" "Dry-run: $desc"
     else
@@ -303,7 +298,9 @@ safe_change() {
     record_created
     return 0
   else
-    log "ERROR" "Mislukt: $desc"
+    log "ERROR" "Failed: $desc"
+    log "DEBUG" "ONTAP command failed: $cmd"
+    log "DEBUG" "ONTAP error output: $output"
     record_failed
     return 1
   fi
@@ -314,7 +311,7 @@ exists_cmd() {
   local out
   out="$(run_remote "$cmd" || true)"
 
-  # Verwijder SSH-banners, lege regels en bekende ruis
+  # Strip SSH banners, blank lines and known noise
   out="$(printf '%s\n' "$out" \
     | grep -Ev '^(Warning: Permanently added|Last login|Authorized users only|This system is)' \
     | sed '/^[[:space:]]*$/d' \
@@ -322,13 +319,13 @@ exists_cmd() {
 
   [[ "$VERBOSE" -eq 1 ]] && log "DEBUG" "exists_cmd output: $(printf '%s' "$out" | head -3 | tr '\n' '|')"
 
-  # Leeg = object bestaat niet
+  # Empty = object does not exist
   [[ -z "$out" ]] && return 1
 
-  # ONTAP "niet gevonden" meldingen — zo breed mogelijk matchen
-  # Getest tegen: "There are no entries matching your query."
-  #               "Error: show failed: Aggregate "x" does not exist."
-  #               "no entries were found"
+  # ONTAP "not found" messages — match as broadly as possible
+  # Tested against: "There are no entries matching your query."
+  #                 "Error: show failed: Aggregate "x" does not exist."
+  #                 "no entries were found"
   if printf '%s\n' "$out" | grep -Eiq \
     'no entries|not found|does not exist|doesn.t exist|this table is currently empty|0 entries|matching your query|show failed|invalid|is an invalid'; then
     return 1
@@ -342,7 +339,7 @@ exists_cmd() {
 # =========================
 next_ip() {
   local base_ip="$1" offset="$2"
-  # Pure Bash implementatie: geen python3 nodig
+  # Pure Bash implementation: no python3 needed
   local a b c d
   IFS='.' read -r a b c d <<< "$base_ip"
   local num=$(( (a << 24) + (b << 16) + (c << 8) + d + offset ))
@@ -353,68 +350,55 @@ next_ip() {
     $(( num & 255 ))
 }
 
+is_ip_used() {
+  local ip="$1"
+  local result
+  result="$(run_remote "network interface show -address ${ip}" 2>/dev/null || true)"
+  log "DEBUG" "Checking if IP ${ip} is used, result: $(echo "$result" | head -3 | tr '\n' '|')"
+  if echo "$result" | grep -q "There are no entries matching your query"; then
+    return 1  # Not used
+  else
+    return 0  # Used
+  fi
+}
+
 next_available_ip() {
   local base_ip="$1" offset="$2"
   local candidate_ip current_offset="$offset"
 
+  log "DEBUG" "next_available_ip called with base_ip=$base_ip, offset=$offset"
+  log "DEBUG" "EXCLUDED_IPS has ${#EXCLUDED_IPS[@]} elements"
+  for i in "${!EXCLUDED_IPS[@]}"; do
+    log "DEBUG" "EXCLUDED_IPS[$i] = '${EXCLUDED_IPS[$i]}'"
+  done
+
   while true; do
     candidate_ip="$(next_ip "$base_ip" "$current_offset")"
 
-    # Controleer of deze IP in de uitsluitingslijst staat
+    # Check if this IP is in the exclusion list
     local is_excluded=0
     for excluded_ip in "${EXCLUDED_IPS[@]}"; do
       if [[ "$candidate_ip" == "$excluded_ip" ]]; then
+        log "DEBUG" "IP $candidate_ip is excluded, trying next"
         is_excluded=1
         break
       fi
     done
 
-    # Als niet uitgesloten, gebruik deze IP
-    if [[ $is_excluded -eq 0 ]]; then
-      printf '%s\n' "$candidate_ip"
-      return 0
+    if [[ $is_excluded -eq 1 ]]; then
+      current_offset=$((current_offset + 1))
+      continue
     fi
 
-    # Anders, probeer de volgende IP
-    current_offset=$((current_offset + 1))
-  done
-}
-
-find_available_vserver_name() {
-  local base_name="$1"
-
-  # In dry-run zijn er geen echte SSH-antwoorden. exists_cmd zou de
-  # SSH-foutmelding als "niet-leeg" zien en altijd true teruggeven,
-  # waardoor de while-lus nooit stopt. Dus: direct base_name teruggeven.
-  if [[ "$DRY_RUN" -eq 1 ]]; then
-    printf '%s\n' "$base_name"
-    return 0
-  fi
-
-  if ! exists_cmd "vserver show -vserver ${base_name}"; then
-    printf '%s\n' "$base_name"
-    return 0
-  fi
-
-  local prefix width next_num candidate
-  if [[ "$base_name" =~ ^(.*[^0-9])([0-9]+)$ ]]; then
-    prefix="${BASH_REMATCH[1]}"
-    local suffix="${BASH_REMATCH[2]}"
-    width="${#suffix}"
-    next_num=$((10#$suffix + 1))
-  else
-    prefix="${base_name}_"
-    width=2
-    next_num=2
-  fi
-
-  while :; do
-    candidate="${prefix}$(printf "%0${width}d" "$next_num")"
-    if ! exists_cmd "vserver show -vserver ${candidate}"; then
-      printf '%s\n' "$candidate"
-      return 0
+    if is_ip_used "$candidate_ip"; then
+      log "DEBUG" "IP $candidate_ip is already in use, trying next"
+      current_offset=$((current_offset + 1))
+      continue
     fi
-    next_num=$((next_num + 1))
+
+    log "DEBUG" "Using available IP: $candidate_ip"
+    printf '%s\n' "$candidate_ip"
+    return 0
   done
 }
 
@@ -422,23 +406,23 @@ find_available_vserver_name() {
 # Config steps
 # =========================
 ensure_ntp() {
-  # Verwerk alle NTP servers uit NTP_SERVERS array; val terug op NTP_SERVER
+  # Process all NTP servers from NTP_SERVERS array; fall back to NTP_SERVER
   local servers=()
   if [[ "${#NTP_SERVERS[@]}" -gt 0 ]] 2>/dev/null; then
     servers=("${NTP_SERVERS[@]}")
   elif [[ -n "${NTP_SERVER:-}" ]]; then
     servers=("$NTP_SERVER")
   else
-    log "INFO" "Geen NTP server geconfigureerd, stap overgeslagen"
+    log "INFO" "No NTP server configured, step skipped"
     return 0
   fi
 
   for srv in "${servers[@]}"; do
     if exists_cmd "cluster time-service ntp server show -server ${srv}"; then
-      log "INFO" "NTP server ${srv} bestaat al"
+      log "INFO" "NTP server ${srv} already exists"
       record_skipped
     else
-      safe_change "Voeg NTP server ${srv} toe" \
+      safe_change "Add NTP server ${srv}" \
         "cluster time-service ntp server create -server ${srv}"
     fi
   done
@@ -448,85 +432,67 @@ count_spare_disks_for_node() {
   local node="$1"
   local raw count
   raw="$(run_remote "storage disk show -node ${node} -container-type spare" || true)"
-  # Debug: always log the raw output to see what's happening
   log "DEBUG" "Raw spare disks output for ${node}: $(printf '%s' "$raw" | head -10 | tr '\n' '|')"
   # Filter lines that match disk names (e.g., NET-1.11, NET-2.28)
   count="$(printf '%s\n' "$raw" | tail -n +2 | grep -Ec '^[A-Z]+-[0-9]+\.[0-9]+[[:space:]]' || true)"
   printf '%s\n' "$count"
 }
 
-count_unassigned_disks_for_node() {
-  local node="$1"
-  # Para ahora, simplemente retorna 0. 
-  # Los spare disks ya son suficientes para crear aggregates.
-  # Si en el futuro se necesitan unassigned disks, se puede implementar.
-  printf '0\n'
-}
-
 ensure_data_aggr_per_node() {
   local required_disks="${AGGR_DISKCOUNT}"
   local reserve="${AGGR_SPARE_RESERVE}"
-  # Totaal benodigde spare disks = aggregate disks + spare reserve
+  # Total spare disks needed = aggregate disks + spare reserve
   local min_spares=$(( required_disks + reserve ))
 
   for node in "${NODES[@]}"; do
     local aggr="${AGGR_PREFIX}_${node//-/_}"
 
     if exists_cmd "storage aggregate show -aggregate ${aggr}"; then
-      log "INFO" "Data aggregate ${aggr} bestaat al"
+      log "INFO" "Data aggregate ${aggr} already exists"
       record_skipped
       continue
     fi
 
     local spare_count
     spare_count="$(count_spare_disks_for_node "$node")"
-    log "INFO" "Node ${node}: ${spare_count} spare disks beschikbaar (nodig: ${required_disks} + ${reserve} reserve = ${min_spares})"
+    log "INFO" "Node ${node}: ${spare_count} spare disks available (needed: ${required_disks} + ${reserve} reserve = ${min_spares})"
 
     if [[ "$spare_count" -ge "$min_spares" ]]; then
-      safe_change "Maak data aggregate ${aggr} op ${node} (${spare_count} spare, ${reserve} reserve aangehouden)" \
+      safe_change "Create data aggregate ${aggr} on ${node} (${spare_count} spare, ${reserve} reserve kept)" \
         "storage aggregate create -aggregate ${aggr} -node ${node} -diskcount ${required_disks} -raidtype ${AGGR_RAIDTYPE}"
-      # Kleine pauze tussen aggregate creaties om SSH rate limiting te voorkomen
+      # Short pause between aggregate creations to avoid SSH rate limiting
       sleep 2
     else
-      log "WARN" "Node ${node}: onvoldoende spare disks voor ${aggr} (${spare_count} beschikbaar, ${min_spares} nodig incl. ${reserve} reserve)"
+      log "WARN" "Node ${node}: insufficient spare disks for ${aggr} (${spare_count} available, ${min_spares} needed incl. ${reserve} reserve)"
       record_warn
     fi
   done
 }
 
-ensure_ipspace() {
-  if exists_cmd "network ipspace show -ipspace ${IPSPACE_NAME}"; then
-    log "INFO" "IPspace ${IPSPACE_NAME} bestaat al"
-    record_skipped
-  else
-    safe_change "Maak IPspace ${IPSPACE_NAME}" "network ipspace create -ipspace ${IPSPACE_NAME}"
-  fi
-}
-
 ensure_vlan20_ports() {
   for node in "${NODES[@]}"; do
     local vlan_name="${VLAN20_BASE_PORT}-${VLAN_ID}"
-    # Verwijder de base port uit Cluster broadcast domain indien nodig
+    # Remove the base port from the Cluster broadcast domain if needed
     if exists_cmd "network port broadcast-domain show -broadcast-domain Cluster -ports ${node}:${VLAN20_BASE_PORT}"; then
-      safe_change "Verwijder port ${node}:${VLAN20_BASE_PORT} uit Cluster broadcast domain" \
+      safe_change "Remove port ${node}:${VLAN20_BASE_PORT} from Cluster broadcast domain" \
         "network port broadcast-domain remove-ports -broadcast-domain Cluster -ports ${node}:${VLAN20_BASE_PORT}"
     fi
     if exists_cmd "network port vlan show -node ${node} -vlan-name ${vlan_name}"; then
-      log "INFO" "VLAN port ${node}:${vlan_name} bestaat al"
+      log "INFO" "VLAN port ${node}:${vlan_name} already exists"
       record_skipped
     else
-      safe_change "Maak VLAN port ${node}:${vlan_name}" \
+      safe_change "Create VLAN port ${node}:${vlan_name}" \
         "network port vlan create -node ${node} -port ${VLAN20_BASE_PORT} -vlan-id ${VLAN_ID}"
     fi
   done
 }
 
 ensure_port_mtu_all() {
-  # In ONTAP volgt de port-MTU automatisch het broadcast domain.
-  # De MTU moet op het broadcast domain gezet worden, niet op de port direct.
-  # network port modify faalt als de port al in een broadcast domain zit.
-  # We passen de MTU aan op het broadcast domain als dat al bestaat,
-  # anders wordt de MTU meegegeven bij broadcast-domain create (zie ensure_broadcast_domain).
+  # In ONTAP the port MTU follows the broadcast domain automatically.
+  # MTU must be set on the broadcast domain, not directly on the port.
+  # network port modify fails if the port is already in a broadcast domain.
+  # We update the MTU on the broadcast domain if it already exists,
+  # otherwise the MTU is passed during broadcast-domain create (see ensure_broadcast_domain).
   for bd_name in "$BROADCAST_DOMAIN_CIFS" "$BROADCAST_DOMAIN_VLAN20"; do
     local mtu
     if [[ "$bd_name" == "$BROADCAST_DOMAIN_CIFS" ]]; then
@@ -534,51 +500,58 @@ ensure_port_mtu_all() {
     else
       mtu="$NFS_ISCSI_MTU"
     fi
-    if exists_cmd "network port broadcast-domain show -broadcast-domain ${bd_name} -ipspace ${IPSPACE_NAME}"; then
-      safe_change "Zet MTU ${mtu} op broadcast domain ${bd_name}" \
-        "network port broadcast-domain modify -broadcast-domain ${bd_name} -ipspace ${IPSPACE_NAME} -mtu ${mtu}" || true
+    if exists_cmd "network port broadcast-domain show -broadcast-domain ${bd_name} -ipspace Default"; then
+      safe_change "Set MTU ${mtu} on broadcast domain ${bd_name}" \
+        "network port broadcast-domain modify -broadcast-domain ${bd_name} -ipspace Default -mtu ${mtu}" || true
     fi
   done
 }
 
 ensure_broadcast_domain() {
-  local bd_name="$1" fg_name="$2" mtu="$3"
-  shift 3
+  local bd_name="$1" mtu="$2"
+  shift 2
   local ports=("$@")
   local port_csv
   port_csv="$(IFS=,; echo "${ports[*]}")"
 
-  # Controleer of alle ports bestaan
+  # Verify all ports exist
   for port in "${ports[@]}"; do
     local node="${port%:*}" port_name="${port#*:}"
     if ! exists_cmd "network port show -node ${node} -port ${port_name}"; then
-      log "ERROR" "Port ${port} bestaat niet op node ${node}. Controleer de configuratie."
+      log "ERROR" "Port ${port} does not exist on node ${node}. Check the configuration."
       record_failed
       return 1
     fi
   done
 
-  # Verwijder ports uit Default broadcast domain indien ze daar zitten
+  # Remove ports from existing broadcast domains if needed
   for port in "${ports[@]}"; do
-    if exists_cmd "network port broadcast-domain show -broadcast-domain Default -ports ${port}"; then
-      safe_change "Verwijder port ${port} uit Default broadcast domain" \
-        "network port broadcast-domain remove-ports -broadcast-domain Default -ports ${port}"
-    fi
+    run_remote "network port broadcast-domain remove-ports -broadcast-domain Default -ports ${port}" 2>/dev/null || true
   done
 
-  if exists_cmd "network port broadcast-domain show -broadcast-domain ${bd_name} -ipspace ${IPSPACE_NAME}"; then
-    log "INFO" "Broadcast domain ${bd_name} bestaat al"
+  if exists_cmd "network port broadcast-domain show -broadcast-domain ${bd_name} -ipspace Default"; then
+    log "INFO" "Broadcast domain ${bd_name} already exists"
+    # Add any ports not yet in the broadcast domain
+    for port in "${ports[@]}"; do
+      log "DEBUG" "Checking if port ${port} is in broadcast domain ${bd_name}"
+      # Get the list of ports currently in the broadcast domain
+      local current_ports
+      current_ports="$(run_remote "network port broadcast-domain show -broadcast-domain ${bd_name} -ipspace Default" 2>&1 || echo "")"
+      log "DEBUG" "Raw output from broadcast-domain show: '${current_ports}'"
+      current_ports="$(printf '%s\n' "$current_ports" | grep "^[[:space:]]*Ports:" | sed 's/.*Ports: //' | tr ',' ' ' || echo "")"
+      if ! echo "${current_ports}" | grep -q "${port}"; then
+        safe_change "Add port ${port} to broadcast domain ${bd_name}" \
+          "network port broadcast-domain add-ports -broadcast-domain ${bd_name} -ipspace Default -ports ${port}"
+      fi
+    done
     record_skipped
   else
-    safe_change "Maak broadcast domain ${bd_name}" \
-      "network port broadcast-domain create -broadcast-domain ${bd_name} -ipspace ${IPSPACE_NAME} -mtu ${mtu} -ports ${port_csv}"
+    safe_change "Create broadcast domain ${bd_name}" \
+      "network port broadcast-domain create -broadcast-domain ${bd_name} -ipspace Default -mtu ${mtu} -ports ${port_csv}"
   fi
 
-  # Opmerking: Failover groups zijn verouderd in moderne ONTAP.
-  # LIFs kunnen automatisch failover zonder expliciete failover groups.
-  # Desgewenst kunnen custom failover groups gemaakt worden op specifieke vservers,
-  # maar niet op de "Cluster" vserver in data IPspace.
-  # Het maken van failover groups in ONTAP 9+ is optioneel en niet nodig voor basiswerking.
+  # Note: Failover groups are deprecated in modern ONTAP.
+  # LIFs can fail over automatically without explicit failover groups.
 }
 
 build_ports_for_cifs() {
@@ -596,33 +569,38 @@ build_ports_for_vlan20() {
 ensure_vserver() {
   local proto_type="${1:-}"
   if [[ -z "$proto_type" ]]; then
-    log "ERROR" "ensure_vserver verwacht 1 argument (type)"
+    log "ERROR" "ensure_vserver expects 1 argument (type)"
     record_failed
     return 1
   fi
 
   local base_var="VSERVER_BASE_${proto_type}"
   local proto_var="VSERVER_PROTOCOLS_${proto_type}"
-  local base_name protocols svm root_aggr
+  local base_name protocols root_aggr existing_svm
 
   eval "base_name=\${${base_var}}"
   eval "protocols=\${${proto_var}}"
-
-  svm="$(find_available_vserver_name "$base_name")"
   root_aggr="${AGGR_PREFIX}_${NODES[0]//-/_}"
 
-  if exists_cmd "vserver show -vserver ${svm}"; then
-    log "INFO" "Vserver ${svm} (${proto_type}) bestaat al"
+  # Check if a vserver with this protocol already exists; if so, use it.
+  existing_svm="$(run_remote "vserver show -allowed-protocols ${protocols} -fields vserver" 2>/dev/null \
+    | grep -v '^vserver\|^---\|^[[:space:]]*$\|There are no entries' \
+    | awk '{print $1}' | head -1 || true)"
+
+  if [[ -n "$existing_svm" ]]; then
+    log "INFO" "Vserver ${existing_svm} for protocol ${proto_type} already exists"
     record_skipped
-  else
-    safe_change "Maak vserver ${svm} (${proto_type})" \
-      "vserver create -vserver ${svm} -subtype default -rootvolume ${svm}_root -rootvolume-security-style unix -aggregate ${root_aggr} -ipspace ${IPSPACE_NAME}"
+    SVM_RESULT="$existing_svm"
+    return 0
   fi
 
-  safe_change "Enable protocols ${protocols} voor ${svm}" \
-    "vserver modify -vserver ${svm} -allowed-protocols ${protocols}" || true
+  safe_change "Create vserver ${base_name} (${proto_type})" \
+    "vserver create -vserver ${base_name} -subtype default -rootvolume ${base_name}_root -rootvolume-security-style unix -aggregate ${root_aggr}"
 
-  SVM_RESULT="$svm"
+  safe_change "Enable protocols ${protocols} for ${base_name}" \
+    "vserver modify -vserver ${base_name} -allowed-protocols ${protocols}" || true
+
+  SVM_RESULT="$base_name"
   return 0
 }
 
@@ -630,12 +608,12 @@ ensure_export_policy() {
   local svm="$1"
   local policy="exp_${svm}"
   if exists_cmd "vserver export-policy show -vserver ${svm} -policyname ${policy}"; then
-    log "INFO" "Export policy ${policy} bestaat al"
+    log "INFO" "Export policy ${policy} already exists"
     record_skipped
   else
-    safe_change "Maak export policy ${policy}" \
+    safe_change "Create export policy ${policy}" \
       "vserver export-policy create -vserver ${svm} -policyname ${policy}"
-    safe_change "Maak export policy rule voor ${policy}" \
+    safe_change "Create export policy rule for ${policy}" \
       "vserver export-policy rule create -vserver ${svm} -policyname ${policy} -ruleindex 1 -protocol any -clientmatch ${EXPORT_CLIENTMATCH} -rorule ${EXPORT_RORULE} -rwrule ${EXPORT_RWRULE}"
   fi
 }
@@ -644,14 +622,32 @@ ensure_lifs_for_cifs() {
   local svm="$1" offset_base="${2:-0}" i=0
   for node in "${NODES[@]}"; do
     local lif="lif_cifs_${node//-/_}" ip
+
+    # Check if the home port exists on this node and is suitable for LIF creation
+    if ! exists_cmd "network port show -node ${node} -port ${CIFS_HOME_PORT}"; then
+      log "ERROR" "Port ${CIFS_HOME_PORT} does not exist on node ${node}. Check the configuration."
+      record_failed
+      i=$((i+1))
+      continue
+    fi
+
+    # Check if the port is in the correct broadcast domain
+    if ! exists_cmd "network port broadcast-domain show -broadcast-domain ${BROADCAST_DOMAIN_CIFS} -ipspace Default -ports ${node}:${CIFS_HOME_PORT}"; then
+      log "ERROR" "Port ${CIFS_HOME_PORT} on node ${node} is not in broadcast domain ${BROADCAST_DOMAIN_CIFS}. Check the configuration."
+      record_failed
+      i=$((i+1))
+      continue
+    fi
+
     ip="$(next_available_ip "$CIFS_START_IP" $((offset_base + i)))"
     if exists_cmd "network interface show -vserver ${svm} -lif ${lif}"; then
-      log "INFO" "LIF ${svm}:${lif} bestaat al"
+      log "INFO" "LIF ${svm}:${lif} already exists"
       record_skipped
     else
-      safe_change "Maak CIFS LIF ${svm}:${lif} met IP ${ip}" \
+      log "DEBUG" "Creating CIFS LIF ${svm}:${lif} with IP ${ip} on port ${CIFS_HOME_PORT} for node ${node}"
+      safe_change "Create CIFS LIF ${svm}:${lif} with IP ${ip}" \
         "network interface create -vserver ${svm} -lif ${lif} -service-policy default-data-files -home-node ${node} -home-port ${CIFS_HOME_PORT} -address ${ip} -netmask ${LIF_NETMASK_CIFS}"
-      # Kleine pauze om ervoor te zorgen dat de LIF is aangemaakt
+      # Short pause to ensure the LIF is created before continuing
       sleep 2
     fi
     i=$((i+1))
@@ -664,12 +660,12 @@ ensure_lifs_for_vlan20_svm() {
     local lif="${lif_prefix}_${node//-/_}" ip
     ip="$(next_available_ip "$NFS_ISCSI_START_IP" $((offset_base + i)))"
     if exists_cmd "network interface show -vserver ${svm} -lif ${lif}"; then
-      log "INFO" "LIF ${svm}:${lif} bestaat al"
+      log "INFO" "LIF ${svm}:${lif} already exists"
       record_skipped
     else
-      safe_change "Maak VLAN20 LIF ${svm}:${lif} met IP ${ip}" \
+      safe_change "Create VLAN20 LIF ${svm}:${lif} with IP ${ip}" \
         "network interface create -vserver ${svm} -lif ${lif} -service-policy default-data-files -home-node ${node} -home-port ${vlan_port} -address ${ip} -netmask ${LIF_NETMASK_NFS_ISCSI}"
-      # Kleine pauze om ervoor te zorgen dat de LIF is aangemaakt
+      # Short pause to ensure the LIF is created before continuing
       sleep 2
     fi
     i=$((i+1))
@@ -680,7 +676,7 @@ ensure_volumes() {
   local svm="$1"
   local proto_type="${2:-}"
   if [[ -z "$proto_type" ]]; then
-    log "ERROR" "ensure_volumes verwacht 2 argumenten (svm, type)"
+    log "ERROR" "ensure_volumes expects 2 arguments (svm, type)"
     record_failed
     return 1
   fi
@@ -693,7 +689,7 @@ ensure_volumes() {
   for i in $(seq 1 "${VOLUMES_PER_SVM}"); do
     local vol="${VOL_PREFIX}_${proto_type}_${i}"
 
-    # Round-robin verdeling over nodes
+    # Round-robin distribution across nodes
     local node_idx=$(( (i - 1) % node_count ))
     local aggr
     if [[ "$node_idx" -eq 0 ]]; then
@@ -703,7 +699,7 @@ ensure_volumes() {
     fi
 
     if exists_cmd "volume show -vserver ${svm} -volume ${vol}"; then
-      log "INFO" "Volume ${svm}:${vol} bestaat al"
+      log "INFO" "Volume ${svm}:${vol} already exists"
       record_skipped
       continue
     fi
@@ -714,13 +710,13 @@ ensure_volumes() {
       cmd+=" -junction-path ${junction} -policy ${policy}"
     fi
 
-    safe_change "Maak volume ${svm}:${vol} op ${aggr}" "$cmd"
+    safe_change "Create volume ${svm}:${vol} on ${aggr}" "$cmd"
   done
 }
 
 print_summary() {
   log "SUMMARY" "=============================="
-  log "SUMMARY" "Run voltooid  (${SCRIPT_VERSION})"
+  log "SUMMARY" "Run completed  (${SCRIPT_VERSION})"
   log "SUMMARY" "Created:  ${CREATED_COUNT}"
   log "SUMMARY" "Skipped:  ${SKIPPED_COUNT}"
   log "SUMMARY" "Warnings: ${WARN_COUNT}"
@@ -731,8 +727,8 @@ print_summary() {
 
 main() {
   log "INFO" "=============================="
-  log "INFO" "Start inrichting NetApp cluster ${CLUSTER_MGMT_IP}"
-  log "INFO" "Versie:        ${SCRIPT_VERSION} (${SCRIPT_DATE})"
+  log "INFO" "Starting NetApp cluster setup ${CLUSTER_MGMT_IP}"
+  log "INFO" "Version:       ${SCRIPT_VERSION} (${SCRIPT_DATE})"
   log "INFO" "Config:        ${CONFIG_FILE}"
   log "INFO" "Log file:      ${LOG_FILE}"
   log "INFO" "Verbose:       ${VERBOSE} | Dry-run: ${DRY_RUN} | Color: ${COLOR_MODE}"
@@ -741,9 +737,9 @@ main() {
   log "INFO" "RAID type:     ${AGGR_RAIDTYPE} | Disks: ${AGGR_DISKCOUNT} | Spare reserve: ${AGGR_SPARE_RESERVE}"
   log "INFO" "=============================="
 
-  # Vraag wachtwoord aan het begin als het niet al is ingesteld
+  # Prompt for password at startup if not already set
   if [[ -z "${NETAPP_PASSWORD:-}" ]]; then
-    echo -n "Voer wachtwoord in voor ${NETAPP_USER}@${CLUSTER_MGMT_IP}: "
+    echo -n "Enter password for ${NETAPP_USER}@${CLUSTER_MGMT_IP}: "
     read -s NETAPP_PASSWORD
     echo ""
     export SSHPASS="$NETAPP_PASSWORD"
@@ -753,20 +749,19 @@ main() {
   if [[ "$DRY_RUN" -eq 0 ]]; then
     check_ssh_connectivity
   else
-    log "INFO" "Dry-run modus: SSH-connectiviteitscheck overgeslagen"
+    log "INFO" "Dry-run mode: SSH connectivity check skipped"
   fi
 
   ensure_ntp
   ensure_data_aggr_per_node
-  ensure_ipspace
   ensure_vlan20_ports
   ensure_port_mtu_all
 
-  read -r -a cifs_ports   <<< "$(build_ports_for_cifs)"
-  read -r -a vlan20_ports <<< "$(build_ports_for_vlan20)"
+  mapfile -t cifs_ports   < <(build_ports_for_cifs)
+  mapfile -t vlan20_ports < <(build_ports_for_vlan20)
 
-  ensure_broadcast_domain "$BROADCAST_DOMAIN_CIFS"   "$FAILOVER_GROUP_CIFS"   "$CIFS_MTU"      "${cifs_ports[@]}"
-  ensure_broadcast_domain "$BROADCAST_DOMAIN_VLAN20" "$FAILOVER_GROUP_VLAN20" "$NFS_ISCSI_MTU" "${vlan20_ports[@]}"
+  ensure_broadcast_domain "$BROADCAST_DOMAIN_CIFS"   "$CIFS_MTU"      "${cifs_ports[@]}"
+  ensure_broadcast_domain "$BROADCAST_DOMAIN_VLAN20" "$NFS_ISCSI_MTU" "${vlan20_ports[@]}"
 
   local svm_cifs svm_nfs svm_iscsi
   svm_cifs="" svm_nfs="" svm_iscsi=""
@@ -780,7 +775,7 @@ main() {
   ensure_vserver iscsi
   svm_iscsi="$SVM_RESULT"
 
-  # Export policy alleen voor CIFS en NFS (niet voor iSCSI)
+  # Export policy only for CIFS and NFS (not for iSCSI)
   ensure_export_policy "$svm_cifs"
   ensure_export_policy "$svm_nfs"
 

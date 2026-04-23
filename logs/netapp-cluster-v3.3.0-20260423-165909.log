@@ -1,0 +1,34 @@
+[2026-04-23 16:59:09] [INFO] ==============================
+[2026-04-23 16:59:09] [INFO] Start inrichting NetApp cluster 192.168.1.22
+[2026-04-23 16:59:09] [INFO] Versie:        v3.3.0 (2026-04-16)
+[2026-04-23 16:59:09] [INFO] Config:        setup_ontap_2node_cluster.conf
+[2026-04-23 16:59:09] [INFO] Log file:      ./logs/netapp-cluster-v3.3.0-20260423-165909.log
+[2026-04-23 16:59:09] [INFO] Verbose:       0 | Dry-run: 0 | Color: auto
+[2026-04-23 16:59:09] [INFO] User:          admin
+[2026-04-23 16:59:09] [INFO] Nodes:         lab-clus01-01 lab-clus01-02
+[2026-04-23 16:59:09] [INFO] RAID type:     raid_dp | Disks: 8 | Spare reserve: 1
+[2026-04-23 16:59:09] [INFO] ==============================
+[2026-04-23 16:59:09] [INFO] Controleer SSH-verbinding naar admin@192.168.1.22 ...
+[2026-04-23 16:59:09] [INFO] Key-based authenticatie niet beschikbaar, probeer wachtwoord...
+[2026-04-23 16:59:10] [INFO] SSH-verbinding succesvol (sshpass wachtwoordauth).
+[2026-04-23 16:59:10] [INFO] NTP server 192.168.1.1 bestaat al
+[2026-04-23 16:59:11] [INFO] Data aggregate aggr_data_lab_clus01_01 bestaat al
+[2026-04-23 16:59:12] [INFO] Data aggregate aggr_data_lab_clus01_02 bestaat al
+[2026-04-23 16:59:12] [INFO] IPspace ipspace_data bestaat al
+[2026-04-23 16:59:14] [INFO] VLAN port lab-clus01-01:e0d-20 bestaat al
+[2026-04-23 16:59:15] [INFO] VLAN port lab-clus01-02:e0d-20 bestaat al
+[2026-04-23 16:59:16] [INFO] Zet MTU 1500 op broadcast domain bd_cifs
+[2026-04-23 16:59:17] [INFO] Zet MTU 9000 op broadcast domain bd_vlan20
+[2026-04-23 16:59:19] [INFO] Broadcast domain bd_cifs bestaat al
+[2026-04-23 16:59:19] [DEBUG] Checking if port lab-clus01-01:e0e is in broadcast domain bd_cifs
+[2026-04-23 16:59:20] [DEBUG] Raw output from broadcast-domain show: '
+Last login time: 4/23/2026 14:59:19
+Unsuccessful login attempts since last login: 1
+Error: Ambiguous argument.  Possible matches include:
+    Fields:
+       port-update-status
+       port-update-status-combined
+       port-update-status-details
+       ports
+'
+[2026-04-23 16:59:20] [DEBUG] Current ports in bd_cifs: 'login Ambiguous       '

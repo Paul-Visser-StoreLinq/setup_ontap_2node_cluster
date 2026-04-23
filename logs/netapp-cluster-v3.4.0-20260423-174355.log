@@ -1,0 +1,27 @@
+[2026-04-23 17:43:55] [INFO] ==============================
+[2026-04-23 17:43:55] [INFO] Starting NetApp cluster setup 192.168.1.22
+[2026-04-23 17:43:55] [INFO] Version:       v3.4.0 (2026-04-20)
+[2026-04-23 17:43:55] [INFO] Config:        setup_ontap_2node_cluster.conf
+[2026-04-23 17:43:55] [INFO] Log file:      ./logs/netapp-cluster-v3.4.0-20260423-174355.log
+[2026-04-23 17:43:55] [INFO] Verbose:       0 | Dry-run: 0 | Color: auto
+[2026-04-23 17:43:55] [INFO] User:          admin
+[2026-04-23 17:43:55] [INFO] Nodes:         lab-clus01-01 lab-clus01-02
+[2026-04-23 17:43:55] [INFO] RAID type:     raid_dp | Disks: 8 | Spare reserve: 1
+[2026-04-23 17:43:55] [INFO] ==============================
+[2026-04-23 17:43:55] [INFO] Checking SSH connection to admin@192.168.1.22 ...
+[2026-04-23 17:43:56] [INFO] Key-based authentication not available, trying password...
+[2026-04-23 17:43:56] [INFO] SSH connection successful (sshpass password auth).
+[2026-04-23 17:43:57] [INFO] NTP server 192.168.1.1 already exists
+[2026-04-23 17:43:58] [INFO] Data aggregate aggr_data_lab_clus01_01 already exists
+[2026-04-23 17:43:59] [INFO] Data aggregate aggr_data_lab_clus01_02 already exists
+[2026-04-23 17:44:00] [INFO] VLAN port lab-clus01-01:e0d-20 already exists
+[2026-04-23 17:44:01] [INFO] VLAN port lab-clus01-02:e0d-20 already exists
+[2026-04-23 17:44:07] [ERROR] Failed: Create broadcast domain bd_cifs
+[2026-04-23 17:44:07] [DEBUG] ONTAP command failed: network port broadcast-domain create -broadcast-domain bd_cifs -ipspace Default -mtu 1500 -ports lab-clus01-01:e0e,lab-clus01-02:e0e
+[2026-04-23 17:44:07] [DEBUG] ONTAP error output: 
+Last login time: 4/23/2026 15:44:06
+Unsuccessful login attempts since last login: 1
+
+Error: command failed: Port "lab-clus01-01:e0e" is already assigned to
+       broadcast domain "bd_cifs" in IPspace "ipspace_data".
+

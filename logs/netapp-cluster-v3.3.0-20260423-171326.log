@@ -1,0 +1,71 @@
+[2026-04-23 17:13:26] [INFO] ==============================
+[2026-04-23 17:13:26] [INFO] Start inrichting NetApp cluster 192.168.1.22
+[2026-04-23 17:13:26] [INFO] Versie:        v3.3.0 (2026-04-16)
+[2026-04-23 17:13:26] [INFO] Config:        setup_ontap_2node_cluster.conf
+[2026-04-23 17:13:26] [INFO] Log file:      ./logs/netapp-cluster-v3.3.0-20260423-171326.log
+[2026-04-23 17:13:26] [INFO] Verbose:       0 | Dry-run: 0 | Color: auto
+[2026-04-23 17:13:26] [INFO] User:          admin
+[2026-04-23 17:13:26] [INFO] Nodes:         lab-clus01-01 lab-clus01-02
+[2026-04-23 17:13:26] [INFO] RAID type:     raid_dp | Disks: 8 | Spare reserve: 1
+[2026-04-23 17:13:26] [INFO] ==============================
+[2026-04-23 17:13:26] [INFO] Controleer SSH-verbinding naar admin@192.168.1.22 ...
+[2026-04-23 17:13:26] [INFO] Key-based authenticatie niet beschikbaar, probeer wachtwoord...
+[2026-04-23 17:13:27] [INFO] SSH-verbinding succesvol (sshpass wachtwoordauth).
+[2026-04-23 17:13:28] [INFO] NTP server 192.168.1.1 bestaat al
+[2026-04-23 17:13:28] [INFO] Data aggregate aggr_data_lab_clus01_01 bestaat al
+[2026-04-23 17:13:29] [INFO] Data aggregate aggr_data_lab_clus01_02 bestaat al
+[2026-04-23 17:13:30] [INFO] IPspace ipspace_data bestaat al
+[2026-04-23 17:13:31] [INFO] VLAN port lab-clus01-01:e0d-20 bestaat al
+[2026-04-23 17:13:32] [INFO] VLAN port lab-clus01-02:e0d-20 bestaat al
+[2026-04-23 17:13:34] [INFO] Zet MTU 1500 op broadcast domain bd_cifs
+[2026-04-23 17:13:35] [INFO] Zet MTU 9000 op broadcast domain bd_vlan20
+[2026-04-23 17:13:35] [DEBUG] CIFS ports: lab-clus01-01:e0e lab-clus01-02:e0e
+[2026-04-23 17:13:35] [DEBUG] VLAN20 ports: lab-clus01-01:e0d-20 lab-clus01-02:e0d-20
+[2026-04-23 17:13:37] [DEBUG] Parsed current BD for lab-clus01-01:e0e: ''
+[2026-04-23 17:13:37] [DEBUG] Parsed current BD for lab-clus01-02:e0e: ''
+[2026-04-23 17:13:38] [INFO] Broadcast domain bd_cifs bestaat al
+[2026-04-23 17:13:38] [DEBUG] Checking if port lab-clus01-01:e0e is in broadcast domain bd_cifs
+[2026-04-23 17:13:39] [DEBUG] Raw output from broadcast-domain show: '
+Last login time: 4/23/2026 15:13:38
+Unsuccessful login attempts since last login: 1
+
+               IPspace Name: ipspace_data
+   Layer 2 Broadcast Domain: bd_cifs
+             Configured MTU: 1500
+                      Ports: lab-clus01-01:e0e
+         Port Update Status: complete
+  Status Detail Description: complete
+Combined Port Update Status: complete
+            Failover Groups: bd_cifs
+               Subnet Names: -
+    Is VIP Broadcast Domain: false
+'
+[2026-04-23 17:13:39] [DEBUG] Current ports in bd_cifs: 'lab-clus01-01:e0e'
+[2026-04-23 17:13:39] [DEBUG] Port lab-clus01-01:e0e zit al in bd_cifs
+[2026-04-23 17:13:39] [DEBUG] Checking if port lab-clus01-02:e0e is in broadcast domain bd_cifs
+[2026-04-23 17:13:40] [DEBUG] Raw output from broadcast-domain show: '
+Last login time: 4/23/2026 15:13:39
+Unsuccessful login attempts since last login: 1
+
+               IPspace Name: ipspace_data
+   Layer 2 Broadcast Domain: bd_cifs
+             Configured MTU: 1500
+                      Ports: lab-clus01-01:e0e
+         Port Update Status: complete
+  Status Detail Description: complete
+Combined Port Update Status: complete
+            Failover Groups: bd_cifs
+               Subnet Names: -
+    Is VIP Broadcast Domain: false
+'
+[2026-04-23 17:13:40] [DEBUG] Current ports in bd_cifs: 'lab-clus01-01:e0e'
+[2026-04-23 17:13:40] [DEBUG] Port lab-clus01-02:e0e is niet in bd_cifs, wordt toegevoegd
+[2026-04-23 17:13:40] [ERROR] Mislukt: Voeg port lab-clus01-02:e0e toe aan broadcast domain bd_cifs
+[2026-04-23 17:13:40] [DEBUG] ONTAP command failed: network port broadcast-domain add-ports -broadcast-domain bd_cifs -ipspace ipspace_data -ports lab-clus01-02:e0e
+[2026-04-23 17:13:40] [DEBUG] ONTAP error output: 
+Last login time: 4/23/2026 15:13:39
+Unsuccessful login attempts since last login: 1
+
+Error: command failed: Port "lab-clus01-02:e0e" is already assigned to
+       broadcast domain "Default" in IPspace "Default".
+

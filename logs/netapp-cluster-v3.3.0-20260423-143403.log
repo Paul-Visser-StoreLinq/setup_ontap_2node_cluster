@@ -1,0 +1,95 @@
+[2026-04-23 14:34:03] [INFO] ==============================
+[2026-04-23 14:34:03] [INFO] Start inrichting NetApp cluster 192.168.1.22
+[2026-04-23 14:34:03] [INFO] Versie:        v3.3.0 (2026-04-16)
+[2026-04-23 14:34:03] [INFO] Config:        setup_ontap_2node_cluster.conf
+[2026-04-23 14:34:03] [INFO] Log file:      ./logs/netapp-cluster-v3.3.0-20260423-143403.log
+[2026-04-23 14:34:03] [INFO] Verbose:       0 | Dry-run: 0 | Color: auto
+[2026-04-23 14:34:03] [INFO] User:          admin
+[2026-04-23 14:34:03] [INFO] Nodes:         lab-clus01-01 lab-clus01-02
+[2026-04-23 14:34:03] [INFO] RAID type:     raid_dp | Disks: 8 | Spare reserve: 1
+[2026-04-23 14:34:03] [INFO] ==============================
+[2026-04-23 14:34:08] [INFO] Controleer SSH-verbinding naar admin@192.168.1.22 ...
+[2026-04-23 14:34:08] [INFO] Key-based authenticatie niet beschikbaar, probeer wachtwoord...
+[2026-04-23 14:34:10] [INFO] SSH-verbinding succesvol (sshpass wachtwoordauth).
+[2026-04-23 14:34:11] [INFO] NTP server 192.168.1.1 bestaat al
+[2026-04-23 14:34:11] [INFO] Data aggregate aggr_data_lab_clus01_01 bestaat al
+[2026-04-23 14:34:12] [INFO] Data aggregate aggr_data_lab_clus01_02 bestaat al
+[2026-04-23 14:34:13] [INFO] IPspace ipspace_data bestaat al
+[2026-04-23 14:34:14] [INFO] VLAN port lab-clus01-01:e0d-20 bestaat al
+[2026-04-23 14:34:16] [INFO] VLAN port lab-clus01-02:e0d-20 bestaat al
+
+Last login time: 4/23/2026 12:34:17
+Unsuccessful login attempts since last login: 1
+
+[2026-04-23 14:34:17] [INFO] Zet MTU 1500 op broadcast domain bd_cifs
+
+Last login time: 4/23/2026 12:34:18
+Unsuccessful login attempts since last login: 1
+
+[2026-04-23 14:34:19] [INFO] Zet MTU 9000 op broadcast domain bd_vlan20
+[2026-04-23 14:34:21] [INFO] Broadcast domain bd_cifs bestaat al
+[2026-04-23 14:34:23] [INFO] Broadcast domain bd_vlan20 bestaat al
+
+Last login time: 4/23/2026 12:34:27
+Unsuccessful login attempts since last login: 1
+[Job 128] Job is queued: Create svm_cifs05.                                    [Job 128]                                                                      [Job 128] Job succeeded:                                                       
+Vserver creation completed.
+
+[2026-04-23 14:34:30] [INFO] Maak vserver svm_cifs05 (cifs)
+
+Last login time: 4/23/2026 12:34:27
+Unsuccessful login attempts since last login: 1
+
+[2026-04-23 14:34:31] [INFO] Enable protocols cifs voor svm_cifs05
+
+Last login time: 4/23/2026 12:34:35
+Unsuccessful login attempts since last login: 1
+[Job 129] Job is queued: Create svm_nfs05.                                     [Job 129] Job is queued: Create svm_nfs05.                                     [Job 129] Job is queued: Create svm_nfs05.                                     [Job 129]                                                                      [Job 129] Job succeeded:                                                       
+Vserver creation completed.
+
+[2026-04-23 14:34:41] [INFO] Maak vserver svm_nfs05 (nfs)
+
+Last login time: 4/23/2026 12:34:35
+Unsuccessful login attempts since last login: 1
+
+[2026-04-23 14:34:41] [INFO] Enable protocols nfs voor svm_nfs05
+
+Last login time: 4/23/2026 12:34:46
+Unsuccessful login attempts since last login: 1
+[Job 130] Job is queued: Create svm_iscsi05.                                   [Job 130]                                                                      [Job 130] Job succeeded:                                                       
+Vserver creation completed.
+
+[2026-04-23 14:34:53] [INFO] Maak vserver svm_iscsi05 (iscsi)
+
+Last login time: 4/23/2026 12:34:51
+Unsuccessful login attempts since last login: 1
+
+[2026-04-23 14:34:53] [INFO] Enable protocols iscsi voor svm_iscsi05
+
+Last login time: 4/23/2026 12:34:54
+Unsuccessful login attempts since last login: 1
+
+[2026-04-23 14:34:55] [INFO] Maak export policy exp_svm_cifs05
+
+Last login time: 4/23/2026 12:34:55
+Unsuccessful login attempts since last login: 1
+
+[2026-04-23 14:34:55] [INFO] Maak export policy rule voor exp_svm_cifs05
+
+Last login time: 4/23/2026 12:34:56
+Unsuccessful login attempts since last login: 1
+
+[2026-04-23 14:34:57] [INFO] Maak export policy exp_svm_nfs05
+
+Last login time: 4/23/2026 12:34:57
+Unsuccessful login attempts since last login: 1
+
+[2026-04-23 14:34:57] [INFO] Maak export policy rule voor exp_svm_nfs05
+
+Last login time: 4/23/2026 12:34:58
+Unsuccessful login attempts since last login: 1
+
+Info: Failed to create logical interface.
+Error: command failed: Duplicate IP address 192.168.1.25
+
+[2026-04-23 14:34:59] [ERROR] Mislukt: Maak CIFS LIF svm_cifs05:lif_cifs_lab_clus01_01 met IP 192.168.1.25
