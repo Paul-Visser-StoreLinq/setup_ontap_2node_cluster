@@ -33,7 +33,7 @@ SCRIPT_DATE="2026-04-16"
 # =========================
 # Defaults
 # =========================
-CONFIG_FILE=""
+CONFIG_FILE="setup_ontap_2node_cluster.conf"
 VERBOSE=0
 DRY_RUN=0
 COLOR_MODE="auto"
@@ -215,10 +215,32 @@ check_ssh_connectivity() {
     return 0
   fi
 
-  # Key-auth mislukt: vraag om wachtwoord via sshpass of interactief
+  # Key-auth mislukt: probeer wachtwoord via sshpass
   log "INFO" "Key-based authenticatie niet beschikbaar, probeer wachtwoord..."
 
+  # Probeer sshpass te installeren als niet beschikbaar
+  if ! command -v sshpass >/dev/null 2>&1; then
+    log "INFO" "sshpass niet beschikbaar."
+    echo -n "Wil je sshpass installeren met brew? (y/n): "
+    read -r response
+    if [[ "$response" =~ ^[Yy]$ ]]; then
+      if command -v brew >/dev/null 2>&1; then
+        log "INFO" "Installeer sshpass..."
+        if brew install hudochenkov/sshpass/sshpass; then
+          log "INFO" "sshpass succesvol geïnstalleerd."
+        else
+          log "WARN" "Kon sshpass niet installeren."
+        fi
+      else
+        log "WARN" "brew niet beschikbaar, kan sshpass niet installeren."
+      fi
+    else
+      log "INFO" "sshpass installatie overgeslagen."
+    fi
+  fi
+
   if command -v sshpass >/dev/null 2>&1 && [[ -n "${NETAPP_PASSWORD:-}" ]]; then
+    export SSHPASS="$NETAPP_PASSWORD"
     # sshpass beschikbaar en wachtwoord in omgevingsvariabele NETAPP_PASSWORD
     if sshpass -e ssh "${SSH_OPTS[@]}" "${NETAPP_USER}@${CLUSTER_MGMT_IP}" "version" >/dev/null 2>&1; then
       log "INFO" "SSH-verbinding succesvol (sshpass wachtwoordauth)."
@@ -307,7 +329,7 @@ exists_cmd() {
   #               "Error: show failed: Aggregate "x" does not exist."
   #               "no entries were found"
   if printf '%s\n' "$out" | grep -Eiq \
-    'no entries|not found|does not exist|doesn.t exist|this table is currently empty|0 entries|matching your query|show failed'; then
+    'no entries|not found|does not exist|doesn.t exist|this table is currently empty|0 entries|matching your query|show failed|invalid|is an invalid'; then
     return 1
   fi
 
@@ -397,24 +419,20 @@ ensure_ntp() {
 count_spare_disks_for_node() {
   local node="$1"
   local raw count
-  raw="$(run_remote "storage aggregate show-spare-disks -original-owner ${node}" || true)"
-  raw="$(printf '%s\n' "$raw" | grep -Ev '^(Warning: Permanently added|Last login)' || true)"
-  count="$({
-    printf '%s\n' "$raw" | awk '
-      NF == 0 { next }
-      /^Note:/ { next }
-      /^Original Owner/ { next }
-      /^Owner/ { next }
-      /^Pool[[:space:]]+/ { next }
-      /^Local/ { next }
-      /^Spare/ { next }
-      /^Disk[[:space:]]+/ { next }
-      /^-+[[:space:]]*$/ { next }
-      /^[[:space:]]*[0-9]+\.[0-9]+/ { c++ }
-      END { print c+0 }
-    '
-  })"
+  raw="$(run_remote "storage disk show -node ${node} -container-type spare" || true)"
+  # Debug: always log the raw output to see what's happening
+  log "DEBUG" "Raw spare disks output for ${node}: $(printf '%s' "$raw" | head -10 | tr '\n' '|')"
+  # Filter lines that match disk names (e.g., NET-1.11, NET-2.28)
+  count="$(printf '%s\n' "$raw" | tail -n +2 | grep -Ec '^[A-Z]+-[0-9]+\.[0-9]+[[:space:]]' || true)"
   printf '%s\n' "$count"
+}
+
+count_unassigned_disks_for_node() {
+  local node="$1"
+  # Para ahora, simplemente retorna 0. 
+  # Los spare disks ya son suficientes para crear aggregates.
+  # Si en el futuro se necesitan unassigned disks, se puede implementar.
+  printf '0\n'
 }
 
 ensure_data_aggr_per_node() {
@@ -427,30 +445,20 @@ ensure_data_aggr_per_node() {
     local aggr="${AGGR_PREFIX}_${node//-/_}"
 
     if exists_cmd "storage aggregate show -aggregate ${aggr}"; then
-      log "INFO" "Doelaggregate ${aggr} bestaat al"
-      record_skipped
-      continue
-    fi
-
-    # Controleer of er al een niet-root data aggregate bestaat op deze node
-    # (anders dan de root aggr die begint met aggr0_)
-    # Gebruik expliciete node-filter en sluit root aggregates uit
-    local existing_data_aggr
-    existing_data_aggr="$(run_remote "storage aggregate show -node ${node} -fields aggregate,node" || true)"
-    existing_data_aggr="$(printf '%s\n' "$existing_data_aggr" | grep -v '^aggr0_' | grep -v 'aggregate' | grep -v 'matching your query' | grep -v '^[[:space:]]*$' || true)"
-    if [[ -n "$existing_data_aggr" ]]; then
-      log "INFO" "Node ${node} heeft al een non-root data aggregate, geen nieuwe create"
+      log "INFO" "Data aggregate ${aggr} bestaat al"
       record_skipped
       continue
     fi
 
     local spare_count
     spare_count="$(count_spare_disks_for_node "$node")"
-    [[ "$VERBOSE" -eq 1 ]] && log "DEBUG" "Node ${node}: ${spare_count} spare disks beschikbaar (nodig: ${required_disks} + ${reserve} reserve = ${min_spares})"
+    log "INFO" "Node ${node}: ${spare_count} spare disks beschikbaar (nodig: ${required_disks} + ${reserve} reserve = ${min_spares})"
 
     if [[ "$spare_count" -ge "$min_spares" ]]; then
       safe_change "Maak data aggregate ${aggr} op ${node} (${spare_count} spare, ${reserve} reserve aangehouden)" \
         "storage aggregate create -aggregate ${aggr} -node ${node} -diskcount ${required_disks} -raidtype ${AGGR_RAIDTYPE}"
+      # Kleine pauze tussen aggregate creaties om SSH rate limiting te voorkomen
+      sleep 2
     else
       log "WARN" "Node ${node}: onvoldoende spare disks voor ${aggr} (${spare_count} beschikbaar, ${min_spares} nodig incl. ${reserve} reserve)"
       record_warn
@@ -470,6 +478,11 @@ ensure_ipspace() {
 ensure_vlan20_ports() {
   for node in "${NODES[@]}"; do
     local vlan_name="${VLAN20_BASE_PORT}-${VLAN_ID}"
+    # Verwijder de base port uit Cluster broadcast domain indien nodig
+    if exists_cmd "network port broadcast-domain show -broadcast-domain Cluster -ports ${node}:${VLAN20_BASE_PORT}"; then
+      safe_change "Verwijder port ${node}:${VLAN20_BASE_PORT} uit Cluster broadcast domain" \
+        "network port broadcast-domain remove-ports -broadcast-domain Cluster -ports ${node}:${VLAN20_BASE_PORT}"
+    fi
     if exists_cmd "network port vlan show -node ${node} -vlan-name ${vlan_name}"; then
       log "INFO" "VLAN port ${node}:${vlan_name} bestaat al"
       record_skipped
@@ -507,6 +520,24 @@ ensure_broadcast_domain() {
   local port_csv
   port_csv="$(IFS=,; echo "${ports[*]}")"
 
+  # Controleer of alle ports bestaan
+  for port in "${ports[@]}"; do
+    local node="${port%:*}" port_name="${port#*:}"
+    if ! exists_cmd "network port show -node ${node} -port ${port_name}"; then
+      log "ERROR" "Port ${port} bestaat niet op node ${node}. Controleer de configuratie."
+      record_failed
+      return 1
+    fi
+  done
+
+  # Verwijder ports uit Default broadcast domain indien ze daar zitten
+  for port in "${ports[@]}"; do
+    if exists_cmd "network port broadcast-domain show -broadcast-domain Default -ports ${port}"; then
+      safe_change "Verwijder port ${port} uit Default broadcast domain" \
+        "network port broadcast-domain remove-ports -broadcast-domain Default -ports ${port}"
+    fi
+  done
+
   if exists_cmd "network port broadcast-domain show -broadcast-domain ${bd_name} -ipspace ${IPSPACE_NAME}"; then
     log "INFO" "Broadcast domain ${bd_name} bestaat al"
     record_skipped
@@ -515,13 +546,11 @@ ensure_broadcast_domain() {
       "network port broadcast-domain create -broadcast-domain ${bd_name} -ipspace ${IPSPACE_NAME} -mtu ${mtu} -ports ${port_csv}"
   fi
 
-  if exists_cmd "network interface failover-groups show -vserver Cluster -failover-group ${fg_name}"; then
-    log "INFO" "Failover group ${fg_name} bestaat al"
-    record_skipped
-  else
-    safe_change "Maak failover group ${fg_name}" \
-      "network interface failover-groups create -vserver Cluster -failover-group ${fg_name} -targets ${port_csv}"
-  fi
+  # Opmerking: Failover groups zijn verouderd in moderne ONTAP.
+  # LIFs kunnen automatisch failover zonder expliciete failover groups.
+  # Desgewenst kunnen custom failover groups gemaakt worden op specifieke vservers,
+  # maar niet op de "Cluster" vserver in data IPspace.
+  # Het maken van failover groups in ONTAP 9+ is optioneel en niet nodig voor basiswerking.
 }
 
 build_ports_for_cifs() {
@@ -559,7 +588,7 @@ ensure_vserver() {
     record_skipped
   else
     safe_change "Maak vserver ${svm} (${proto_type})" \
-      "vserver create -vserver ${svm} -subtype default -rootvolume ${svm}_root -rootvolume-security-style unix -rootvolume-aggregate ${root_aggr} -aggregate-limit 0 -ipspace ${IPSPACE_NAME}"
+      "vserver create -vserver ${svm} -subtype default -rootvolume ${svm}_root -rootvolume-security-style unix -aggregate ${root_aggr} -ipspace ${IPSPACE_NAME}"
   fi
 
   safe_change "Enable protocols ${protocols} voor ${svm}" \
@@ -593,7 +622,9 @@ ensure_lifs_for_cifs() {
       record_skipped
     else
       safe_change "Maak CIFS LIF ${svm}:${lif} met IP ${ip}" \
-        "network interface create -vserver ${svm} -lif ${lif} -service-policy default-data-files -home-node ${node} -home-port ${CIFS_HOME_PORT} -address ${ip} -netmask ${LIF_NETMASK_CIFS} -failover-group ${FAILOVER_GROUP_CIFS}"
+        "network interface create -vserver ${svm} -lif ${lif} -service-policy default-data-files -home-node ${node} -home-port ${CIFS_HOME_PORT} -address ${ip} -netmask ${LIF_NETMASK_CIFS}"
+      # Kleine pauze om ervoor te zorgen dat de LIF is aangemaakt
+      sleep 2
     fi
     i=$((i+1))
   done
@@ -609,7 +640,9 @@ ensure_lifs_for_vlan20_svm() {
       record_skipped
     else
       safe_change "Maak VLAN20 LIF ${svm}:${lif} met IP ${ip}" \
-        "network interface create -vserver ${svm} -lif ${lif} -service-policy default-data-files -home-node ${node} -home-port ${vlan_port} -address ${ip} -netmask ${LIF_NETMASK_NFS_ISCSI} -failover-group ${FAILOVER_GROUP_VLAN20}"
+        "network interface create -vserver ${svm} -lif ${lif} -service-policy default-data-files -home-node ${node} -home-port ${vlan_port} -address ${ip} -netmask ${LIF_NETMASK_NFS_ISCSI}"
+      # Kleine pauze om ervoor te zorgen dat de LIF is aangemaakt
+      sleep 2
     fi
     i=$((i+1))
   done
@@ -679,6 +712,15 @@ main() {
   log "INFO" "Nodes:         ${NODES[*]}"
   log "INFO" "RAID type:     ${AGGR_RAIDTYPE} | Disks: ${AGGR_DISKCOUNT} | Spare reserve: ${AGGR_SPARE_RESERVE}"
   log "INFO" "=============================="
+
+  # Vraag wachtwoord aan het begin als het niet al is ingesteld
+  if [[ -z "${NETAPP_PASSWORD:-}" ]]; then
+    echo -n "Voer wachtwoord in voor ${NETAPP_USER}@${CLUSTER_MGMT_IP}: "
+    read -s NETAPP_PASSWORD
+    echo ""
+    export SSHPASS="$NETAPP_PASSWORD"
+    SSH_USE_SSHPASS=1
+  fi
 
   if [[ "$DRY_RUN" -eq 0 ]]; then
     check_ssh_connectivity
