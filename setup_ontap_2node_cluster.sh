@@ -5,6 +5,10 @@
 #
 # VERSION HISTORY
 # ------------------------------------------------------------------------------
+# v3.6.0  2026-04-24  CLUSTER_NAME drives node names (clustername-01/02)
+#                     NODES is derived; no longer set in config
+# v3.5.0  2026-04-24  Network ports driven by config (CIFS_PORTS, VLAN20_BASE_PORTS)
+#                     Falls back to NODES+CIFS_HOME_PORT / NODES+VLAN20_BASE_PORT
 # v3.4.0  2026-04-20  Removed IPspace: always uses Default ipspace
 #                     No new vserver created if one for that protocol exists
 #                     Removed unused variables and functions
@@ -13,8 +17,8 @@
 # ==============================================================================
 set -euo pipefail
 
-SCRIPT_VERSION="v3.4.0"
-SCRIPT_DATE="2026-04-20"
+SCRIPT_VERSION="v3.6.0"
+SCRIPT_DATE="2026-04-24"
 
 # =========================
 # Defaults
@@ -36,6 +40,11 @@ SVM_RESULT=""
 
 # SSH auth mode: 0=interactive/key, 1=sshpass
 SSH_USE_SSHPASS=0
+
+# Port arrays — populated from config or built from NODES + base port defaults
+CIFS_PORTS=()
+VLAN20_BASE_PORTS=()
+VLAN20_PORTS=()   # derived: VLAN20_BASE_PORTS + VLAN_ID
 
 # =========================
 # Logging
@@ -144,7 +153,7 @@ setup_colors
 # Validate config variables
 # =========================
 : "${CLUSTER_MGMT_IP:?CLUSTER_MGMT_IP missing in config}"
-: "${NODES:?NODES missing in config}"
+: "${CLUSTER_NAME:?CLUSTER_NAME missing in config}"
 : "${AGGR_PREFIX:=aggr_data}"
 : "${AGGR_DISKCOUNT:=8}"
 : "${AGGR_RAIDTYPE:=raid_dp}"
@@ -192,6 +201,27 @@ if [[ -n "${EXCLUDED_IPS:-}" ]]; then
     IFS=', ' read -ra EXCLUDED_IPS <<< "${EXCLUDED_IPS}"
   fi
 fi
+
+# --- Derive node names from CLUSTER_NAME ---
+NODES=("${CLUSTER_NAME}-01" "${CLUSTER_NAME}-02")
+
+# --- Port arrays ---
+# If CIFS_PORTS was not defined in config, build it from NODES + CIFS_HOME_PORT.
+if [[ "${#CIFS_PORTS[@]}" -eq 0 ]]; then
+  for _n in "${NODES[@]}"; do CIFS_PORTS+=("${_n}:${CIFS_HOME_PORT}"); done
+fi
+
+# If VLAN20_BASE_PORTS was not defined in config, build from NODES + VLAN20_BASE_PORT.
+if [[ "${#VLAN20_BASE_PORTS[@]}" -eq 0 ]]; then
+  for _n in "${NODES[@]}"; do VLAN20_BASE_PORTS+=("${_n}:${VLAN20_BASE_PORT}"); done
+fi
+
+# Derive VLAN20_PORTS (actual VLAN port name per node) from VLAN20_BASE_PORTS + VLAN_ID.
+VLAN20_PORTS=()
+for _bp in "${VLAN20_BASE_PORTS[@]}"; do
+  VLAN20_PORTS+=("${_bp%:*}:${_bp#*:}-${VLAN_ID}")
+done
+unset _n _bp
 
 # =========================
 # SSH helpers
@@ -470,19 +500,20 @@ ensure_data_aggr_per_node() {
 }
 
 ensure_vlan20_ports() {
-  for node in "${NODES[@]}"; do
-    local vlan_name="${VLAN20_BASE_PORT}-${VLAN_ID}"
+  for port_spec in "${VLAN20_BASE_PORTS[@]}"; do
+    local node="${port_spec%:*}" base_port="${port_spec#*:}"
+    local vlan_name="${base_port}-${VLAN_ID}"
     # Remove the base port from the Cluster broadcast domain if needed
-    if exists_cmd "network port broadcast-domain show -broadcast-domain Cluster -ports ${node}:${VLAN20_BASE_PORT}"; then
-      safe_change "Remove port ${node}:${VLAN20_BASE_PORT} from Cluster broadcast domain" \
-        "network port broadcast-domain remove-ports -broadcast-domain Cluster -ports ${node}:${VLAN20_BASE_PORT}"
+    if exists_cmd "network port broadcast-domain show -broadcast-domain Cluster -ports ${node}:${base_port}"; then
+      safe_change "Remove port ${node}:${base_port} from Cluster broadcast domain" \
+        "network port broadcast-domain remove-ports -broadcast-domain Cluster -ports ${node}:${base_port}"
     fi
     if exists_cmd "network port vlan show -node ${node} -vlan-name ${vlan_name}"; then
       log "INFO" "VLAN port ${node}:${vlan_name} already exists"
       record_skipped
     else
       safe_change "Create VLAN port ${node}:${vlan_name}" \
-        "network port vlan create -node ${node} -port ${VLAN20_BASE_PORT} -vlan-id ${VLAN_ID}"
+        "network port vlan create -node ${node} -port ${base_port} -vlan-id ${VLAN_ID}"
     fi
   done
 }
@@ -555,15 +586,11 @@ ensure_broadcast_domain() {
 }
 
 build_ports_for_cifs() {
-  local out=()
-  for node in "${NODES[@]}"; do out+=("${node}:${CIFS_HOME_PORT}"); done
-  printf '%s\n' "${out[@]}"
+  printf '%s\n' "${CIFS_PORTS[@]}"
 }
 
 build_ports_for_vlan20() {
-  local out=() vlan_port="${VLAN20_BASE_PORT}-${VLAN_ID}"
-  for node in "${NODES[@]}"; do out+=("${node}:${vlan_port}"); done
-  printf '%s\n' "${out[@]}"
+  printf '%s\n' "${VLAN20_PORTS[@]}"
 }
 
 ensure_vserver() {
@@ -620,20 +647,19 @@ ensure_export_policy() {
 
 ensure_lifs_for_cifs() {
   local svm="$1" offset_base="${2:-0}" i=0
-  for node in "${NODES[@]}"; do
+  for port_spec in "${CIFS_PORTS[@]}"; do
+    local node="${port_spec%:*}" port_name="${port_spec#*:}"
     local lif="lif_cifs_${node//-/_}" ip
 
-    # Check if the home port exists on this node and is suitable for LIF creation
-    if ! exists_cmd "network port show -node ${node} -port ${CIFS_HOME_PORT}"; then
-      log "ERROR" "Port ${CIFS_HOME_PORT} does not exist on node ${node}. Check the configuration."
+    if ! exists_cmd "network port show -node ${node} -port ${port_name}"; then
+      log "ERROR" "Port ${port_name} does not exist on node ${node}. Check the configuration."
       record_failed
       i=$((i+1))
       continue
     fi
 
-    # Check if the port is in the correct broadcast domain
-    if ! exists_cmd "network port broadcast-domain show -broadcast-domain ${BROADCAST_DOMAIN_CIFS} -ipspace Default -ports ${node}:${CIFS_HOME_PORT}"; then
-      log "ERROR" "Port ${CIFS_HOME_PORT} on node ${node} is not in broadcast domain ${BROADCAST_DOMAIN_CIFS}. Check the configuration."
+    if ! exists_cmd "network port broadcast-domain show -broadcast-domain ${BROADCAST_DOMAIN_CIFS} -ipspace Default -ports ${node}:${port_name}"; then
+      log "ERROR" "Port ${port_name} on node ${node} is not in broadcast domain ${BROADCAST_DOMAIN_CIFS}. Check the configuration."
       record_failed
       i=$((i+1))
       continue
@@ -644,10 +670,9 @@ ensure_lifs_for_cifs() {
       log "INFO" "LIF ${svm}:${lif} already exists"
       record_skipped
     else
-      log "DEBUG" "Creating CIFS LIF ${svm}:${lif} with IP ${ip} on port ${CIFS_HOME_PORT} for node ${node}"
+      log "DEBUG" "Creating CIFS LIF ${svm}:${lif} with IP ${ip} on port ${port_name} for node ${node}"
       safe_change "Create CIFS LIF ${svm}:${lif} with IP ${ip}" \
-        "network interface create -vserver ${svm} -lif ${lif} -service-policy default-data-files -home-node ${node} -home-port ${CIFS_HOME_PORT} -address ${ip} -netmask ${LIF_NETMASK_CIFS}"
-      # Short pause to ensure the LIF is created before continuing
+        "network interface create -vserver ${svm} -lif ${lif} -service-policy default-data-files -home-node ${node} -home-port ${port_name} -address ${ip} -netmask ${LIF_NETMASK_CIFS}"
       sleep 2
     fi
     i=$((i+1))
@@ -655,8 +680,9 @@ ensure_lifs_for_cifs() {
 }
 
 ensure_lifs_for_vlan20_svm() {
-  local svm="$1" lif_prefix="$2" offset_base="${3:-0}" i=0 vlan_port="${VLAN20_BASE_PORT}-${VLAN_ID}"
-  for node in "${NODES[@]}"; do
+  local svm="$1" lif_prefix="$2" offset_base="${3:-0}" i=0
+  for port_spec in "${VLAN20_PORTS[@]}"; do
+    local node="${port_spec%:*}" vlan_port="${port_spec#*:}"
     local lif="${lif_prefix}_${node//-/_}" ip
     ip="$(next_available_ip "$NFS_ISCSI_START_IP" $((offset_base + i)))"
     if exists_cmd "network interface show -vserver ${svm} -lif ${lif}"; then
@@ -665,7 +691,6 @@ ensure_lifs_for_vlan20_svm() {
     else
       safe_change "Create VLAN20 LIF ${svm}:${lif} with IP ${ip}" \
         "network interface create -vserver ${svm} -lif ${lif} -service-policy default-data-files -home-node ${node} -home-port ${vlan_port} -address ${ip} -netmask ${LIF_NETMASK_NFS_ISCSI}"
-      # Short pause to ensure the LIF is created before continuing
       sleep 2
     fi
     i=$((i+1))
