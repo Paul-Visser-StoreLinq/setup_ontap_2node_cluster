@@ -1,0 +1,29 @@
+[2026-04-25 12:49:49] [INFO] ==============================
+[2026-04-25 12:49:49] [INFO] Starting NetApp cluster setup 192.168.1.22
+[2026-04-25 12:49:49] [INFO] Version:       v3.6.0 (2026-04-24)
+[2026-04-25 12:49:49] [INFO] Config:        setup_ontap_2node_cluster.conf
+[2026-04-25 12:49:49] [INFO] Log file:      ./logs/netapp-cluster-v3.6.0-20260425-124949.log
+[2026-04-25 12:49:49] [INFO] Verbose:       0 | Dry-run: 0 | Color: auto
+[2026-04-25 12:49:49] [INFO] User:          admin
+[2026-04-25 12:49:49] [INFO] Nodes:         lab-clus01-01 lab-clus01-02
+[2026-04-25 12:49:49] [INFO] RAID type:     raid_dp | Disks: 8 | Spare reserve: 1
+[2026-04-25 12:49:49] [INFO] ==============================
+[2026-04-25 12:49:54] [INFO] Checking SSH connection to admin@192.168.1.22 ...
+[2026-04-25 12:49:55] [INFO] Key-based authentication not available, trying password...
+[2026-04-25 12:49:55] [INFO] SSH connection successful (sshpass password auth).
+[2026-04-25 12:49:57] [INFO] Add NTP server 192.168.1.1
+[2026-04-25 12:49:58] [DEBUG] Raw spare disks output for lab-clus01-01: |Last login time: 4/25/2026 10:49:55|Unsuccessful login attempts since last login: 1||Error: "lab-clus01-01" is an invalid value for field "-nodelist <nodename>",|       ...|       Valid choices in this command's context: na-clus01-01, na-clus01-02|
+[2026-04-25 12:49:58] [INFO] Node lab-clus01-01: 0 spare disks available (needed: 8 + 1 reserve = 9)
+[2026-04-25 12:49:58] [WARN] Node lab-clus01-01: insufficient spare disks for aggr_data_lab_clus01_01 (0 available, 9 needed incl. 1 reserve)
+[2026-04-25 12:50:00] [DEBUG] Raw spare disks output for lab-clus01-02: |Last login time: 4/25/2026 10:49:57|Unsuccessful login attempts since last login: 1||Error: "lab-clus01-02" is an invalid value for field "-nodelist <nodename>",|       ...|       Valid choices in this command's context: na-clus01-01, na-clus01-02|
+[2026-04-25 12:50:00] [INFO] Node lab-clus01-02: 0 spare disks available (needed: 8 + 1 reserve = 9)
+[2026-04-25 12:50:00] [WARN] Node lab-clus01-02: insufficient spare disks for aggr_data_lab_clus01_02 (0 available, 9 needed incl. 1 reserve)
+[2026-04-25 12:50:02] [ERROR] Failed: Create VLAN port lab-clus01-01:e0d-20
+[2026-04-25 12:50:02] [DEBUG] ONTAP command failed: network port vlan create -node lab-clus01-01 -port e0d -vlan-id 20
+[2026-04-25 12:50:02] [DEBUG] ONTAP error output: 
+Last login time: 4/25/2026 10:49:59
+Unsuccessful login attempts since last login: 1
+
+Error: "lab-clus01-01" is an invalid value for field "-node <nodename>"
+       Valid choices in this command's context: na-clus01-01, na-clus01-02
+

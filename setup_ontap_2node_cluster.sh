@@ -1,10 +1,73 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# netapp-2node-setup.sh
-# Configures a NetApp ONTAP 2-node cluster via SSH (ONTAP CLI).
+# setup_ontap_2node_cluster.sh
+#
+# PURPOSE
+#   Automates the initial provisioning of a 2-node NetApp ONTAP cluster.
+#   The script connects to the cluster management IP over SSH and issues
+#   ONTAP CLI commands to build a standard storage environment from scratch.
+#   It is fully idempotent: every step checks whether the object already
+#   exists before attempting to create it, so re-running the script after a
+#   partial failure or to add missing objects is safe.
+#
+# WHAT IT CONFIGURES  (in order)
+#   1. NTP servers
+#   2. Data aggregates  (one per node, using spare disks)
+#   3. VLAN ports        (e.g. e0d-20) on each node
+#   4. Broadcast domains (bd_cifs on Default ipspace, bd_vlan20 on Default)
+#   5. Storage Virtual Machines / SVMs
+#        svm_cifs01  — CIFS protocol
+#        svm_nfs01   — NFS protocol
+#        svm_iscsi01 — iSCSI protocol
+#   6. Export policies + rules for CIFS and NFS SVMs
+#   7. LIFs  (one per node per SVM, IPs assigned from configured start address)
+#   8. Volumes (configurable count per SVM, round-robin across aggregates)
+#
+# PREREQUISITES
+#   - Bash 4.0 or later  (uses arrays and mapfile)
+#   - SSH access to the ONTAP cluster management IP
+#     Authentication order: SSH key → sshpass (password) → interactive
+#   - sshpass (optional, for unattended password auth)
+#     macOS: brew install hudochenkov/sshpass/sshpass
+#   - The cluster must already be initialised (cluster setup complete)
+#   - Sufficient spare disks available on each node
+#
+# USAGE
+#   ./setup_ontap_2node_cluster.sh [OPTIONS]
+#
+#   --config FILE          Config file to use  (default: setup_ontap_2node_cluster.conf)
+#   --dry-run              Print actions without executing any write operations
+#   --verbose              Enable DEBUG-level log output
+#   --color auto|always|never  Coloured log output  (default: auto)
+#   -h, --help             Show this help message
+#
+# CONFIGURATION
+#   All deployment-specific values live in the companion .conf file.
+#   The minimum required settings are:
+#     CLUSTER_MGMT_IP    — management IP of the cluster
+#     CLUSTER_NAME       — base name; nodes are derived as <name>-01 / <name>-02
+#     CIFS_START_IP      — first IP to assign to CIFS LIFs
+#     NFS_ISCSI_START_IP — first IP to assign to NFS/iSCSI LIFs
+#     LIF_NETMASK_CIFS / LIF_NETMASK_NFS_ISCSI
+#
+# NOTES
+#   - The "Cluster" broadcast domain lives in ipspace "Cluster"; the script
+#     removes base ports from that domain before creating VLAN ports on them.
+#   - ONTAP SSH sessions return \r\n line endings; the script strips \r where
+#     command output is used as a variable value.
+#   - Failover groups are not created (deprecated in modern ONTAP).
 #
 # VERSION HISTORY
 # ------------------------------------------------------------------------------
+# v3.7.0  2026-04-27  Bug fixes from live testing:
+#                       - CLUSTER_NAME default corrected to na-clus01
+#                       - Cluster broadcast domain queries use -ipspace Cluster
+#                       - Strip \r from vserver show output (ONTAP SSH \r\n)
+#                       - Suppress noisy stdout from best-effort bd remove
+#                       - Port-in-broadcast-domain check uses exists_cmd
+#                         instead of brittle output parsing
+#                       - ensure_vserver falls back to name-based check before
+#                         attempting to create (handles prior partial runs)
 # v3.6.0  2026-04-24  CLUSTER_NAME drives node names (clustername-01/02)
 #                     NODES is derived; no longer set in config
 # v3.5.0  2026-04-24  Network ports driven by config (CIFS_PORTS, VLAN20_BASE_PORTS)
@@ -17,8 +80,8 @@
 # ==============================================================================
 set -euo pipefail
 
-SCRIPT_VERSION="v3.6.0"
-SCRIPT_DATE="2026-04-24"
+SCRIPT_VERSION="v3.7.0"
+SCRIPT_DATE="2026-04-27"
 
 # =========================
 # Defaults
@@ -105,8 +168,8 @@ Options:
   -h, --help      Show this help
 
 Requirements:
-  - SSH key-based authentication to NETAPP_USER@CLUSTER_MGMT_IP
-  - python3 available on the local system
+  - SSH access to NETAPP_USER@CLUSTER_MGMT_IP (key or password)
+  - Bash 4.0+  (no other local dependencies)
 USAGE
 }
 
@@ -504,9 +567,9 @@ ensure_vlan20_ports() {
     local node="${port_spec%:*}" base_port="${port_spec#*:}"
     local vlan_name="${base_port}-${VLAN_ID}"
     # Remove the base port from the Cluster broadcast domain if needed
-    if exists_cmd "network port broadcast-domain show -broadcast-domain Cluster -ports ${node}:${base_port}"; then
+    if exists_cmd "network port broadcast-domain show -ipspace Cluster -broadcast-domain Cluster -ports ${node}:${base_port}"; then
       safe_change "Remove port ${node}:${base_port} from Cluster broadcast domain" \
-        "network port broadcast-domain remove-ports -broadcast-domain Cluster -ports ${node}:${base_port}"
+        "network port broadcast-domain remove-ports -ipspace Cluster -broadcast-domain Cluster -ports ${node}:${base_port}"
     fi
     if exists_cmd "network port vlan show -node ${node} -vlan-name ${vlan_name}"; then
       log "INFO" "VLAN port ${node}:${vlan_name} already exists"
@@ -555,22 +618,19 @@ ensure_broadcast_domain() {
     fi
   done
 
-  # Remove ports from existing broadcast domains if needed
+  # Best-effort: remove ports from Default broadcast domain before reassigning.
+  # Suppress all output — the port may already be unassigned or in another domain.
   for port in "${ports[@]}"; do
-    run_remote "network port broadcast-domain remove-ports -broadcast-domain Default -ports ${port}" 2>/dev/null || true
+    run_remote "network port broadcast-domain remove-ports -broadcast-domain Default -ports ${port}" > /dev/null 2>&1 || true
   done
 
   if exists_cmd "network port broadcast-domain show -broadcast-domain ${bd_name} -ipspace Default"; then
     log "INFO" "Broadcast domain ${bd_name} already exists"
-    # Add any ports not yet in the broadcast domain
+    # Add any ports not yet in the broadcast domain, using ONTAP's own filter to check.
     for port in "${ports[@]}"; do
-      log "DEBUG" "Checking if port ${port} is in broadcast domain ${bd_name}"
-      # Get the list of ports currently in the broadcast domain
-      local current_ports
-      current_ports="$(run_remote "network port broadcast-domain show -broadcast-domain ${bd_name} -ipspace Default" 2>&1 || echo "")"
-      log "DEBUG" "Raw output from broadcast-domain show: '${current_ports}'"
-      current_ports="$(printf '%s\n' "$current_ports" | grep "^[[:space:]]*Ports:" | sed 's/.*Ports: //' | tr ',' ' ' || echo "")"
-      if ! echo "${current_ports}" | grep -q "${port}"; then
+      if exists_cmd "network port broadcast-domain show -broadcast-domain ${bd_name} -ipspace Default -ports ${port}"; then
+        log "DEBUG" "Port ${port} already in broadcast domain ${bd_name}"
+      else
         safe_change "Add port ${port} to broadcast domain ${bd_name}" \
           "network port broadcast-domain add-ports -broadcast-domain ${bd_name} -ipspace Default -ports ${port}"
       fi
@@ -610,7 +670,9 @@ ensure_vserver() {
   root_aggr="${AGGR_PREFIX}_${NODES[0]//-/_}"
 
   # Check if a vserver with this protocol already exists; if so, use it.
+  # tr -d '\r' strips the carriage returns ONTAP SSH sessions add to line endings.
   existing_svm="$(run_remote "vserver show -allowed-protocols ${protocols} -fields vserver" 2>/dev/null \
+    | tr -d '\r' \
     | grep -v '^vserver\|^---\|^[[:space:]]*$\|There are no entries' \
     | awk '{print $1}' | head -1 || true)"
 
@@ -618,6 +680,15 @@ ensure_vserver() {
     log "INFO" "Vserver ${existing_svm} for protocol ${proto_type} already exists"
     record_skipped
     SVM_RESULT="$existing_svm"
+    return 0
+  fi
+
+  # Also check by name: the vserver may exist from a prior run where protocol
+  # assignment failed or the protocol-based query above missed it.
+  if exists_cmd "vserver show -vserver ${base_name}"; then
+    log "INFO" "Vserver ${base_name} already exists (found by name)"
+    record_skipped
+    SVM_RESULT="$base_name"
     return 0
   fi
 

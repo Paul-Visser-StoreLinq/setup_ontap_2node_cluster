@@ -1,0 +1,33 @@
+[2026-04-27 14:20:04] [INFO] ==============================
+[2026-04-27 14:20:04] [INFO] Starting NetApp cluster setup 192.168.1.22
+[2026-04-27 14:20:04] [INFO] Version:       v3.6.0 (2026-04-24)
+[2026-04-27 14:20:04] [INFO] Config:        setup_ontap_2node_cluster.conf
+[2026-04-27 14:20:04] [INFO] Log file:      ./logs/netapp-cluster-v3.6.0-20260427-142004.log
+[2026-04-27 14:20:04] [INFO] Verbose:       0 | Dry-run: 0 | Color: auto
+[2026-04-27 14:20:04] [INFO] User:          admin
+[2026-04-27 14:20:04] [INFO] Nodes:         na-clus01-01 na-clus01-02
+[2026-04-27 14:20:04] [INFO] RAID type:     raid_dp | Disks: 8 | Spare reserve: 1
+[2026-04-27 14:20:04] [INFO] ==============================
+[2026-04-27 14:20:07] [INFO] Checking SSH connection to admin@192.168.1.22 ...
+[2026-04-27 14:20:07] [INFO] Key-based authentication not available, trying password...
+[2026-04-27 14:20:08] [INFO] SSH connection successful (sshpass password auth).
+[2026-04-27 14:20:09] [INFO] NTP server 192.168.1.1 already exists
+[2026-04-27 14:20:09] [INFO] Data aggregate aggr_data_na_clus01_01 already exists
+[2026-04-27 14:20:10] [INFO] Data aggregate aggr_data_na_clus01_02 already exists
+[2026-04-27 14:20:12] [INFO] VLAN port na-clus01-01:e0d-20 already exists
+[2026-04-27 14:20:13] [INFO] VLAN port na-clus01-02:e0d-20 already exists
+[2026-04-27 14:20:18] [INFO] Create broadcast domain bd_cifs
+[2026-04-27 14:20:22] [INFO] Create broadcast domain bd_vlan20
+[2026-04-27 14:20:23] [INFO] Vserver  for protocol cifs already exists
+[2026-04-27 14:20:24] [INFO] Vserver  for protocol nfs already exists
+[2026-04-27 14:20:24] [INFO] Vserver  for protocol iscsi already exists
+[2026-04-27 14:20:26] [ERROR] Failed: Create export policy exp_
+[2026-04-27 14:20:26] [DEBUG] ONTAP command failed: vserver export-policy create -vserver  -policyname exp_
+[2026-04-27 14:20:26] [DEBUG] ONTAP error output: 
+Last login time: 4/27/2026 12:20:25
+Unsuccessful login attempts since last login: 1
+
+Error: Vserver name: Invalid. The Vserver name must begin with a letter or an
+       underscore. Maximum supported length: 41 if Vserver is type
+       "sync-source", 47 otherwise.
+

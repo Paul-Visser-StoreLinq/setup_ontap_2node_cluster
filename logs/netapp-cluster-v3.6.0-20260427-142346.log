@@ -1,0 +1,68 @@
+[2026-04-27 14:23:46] [INFO] ==============================
+[2026-04-27 14:23:46] [INFO] Starting NetApp cluster setup 192.168.1.22
+[2026-04-27 14:23:46] [INFO] Version:       v3.6.0 (2026-04-24)
+[2026-04-27 14:23:46] [INFO] Config:        setup_ontap_2node_cluster.conf
+[2026-04-27 14:23:46] [INFO] Log file:      ./logs/netapp-cluster-v3.6.0-20260427-142346.log
+[2026-04-27 14:23:46] [INFO] Verbose:       0 | Dry-run: 0 | Color: auto
+[2026-04-27 14:23:46] [INFO] User:          admin
+[2026-04-27 14:23:46] [INFO] Nodes:         na-clus01-01 na-clus01-02
+[2026-04-27 14:23:46] [INFO] RAID type:     raid_dp | Disks: 8 | Spare reserve: 1
+[2026-04-27 14:23:46] [INFO] ==============================
+[2026-04-27 14:23:49] [INFO] Checking SSH connection to admin@192.168.1.22 ...
+[2026-04-27 14:23:50] [INFO] Key-based authentication not available, trying password...
+[2026-04-27 14:23:51] [INFO] SSH connection successful (sshpass password auth).
+[2026-04-27 14:23:51] [INFO] NTP server 192.168.1.1 already exists
+[2026-04-27 14:23:52] [INFO] Data aggregate aggr_data_na_clus01_01 already exists
+[2026-04-27 14:23:53] [INFO] Data aggregate aggr_data_na_clus01_02 already exists
+[2026-04-27 14:23:54] [INFO] VLAN port na-clus01-01:e0d-20 already exists
+[2026-04-27 14:23:55] [INFO] VLAN port na-clus01-02:e0d-20 already exists
+[2026-04-27 14:23:57] [INFO] Set MTU 1500 on broadcast domain bd_cifs
+[2026-04-27 14:24:15] [INFO] Set MTU 9000 on broadcast domain bd_vlan20
+[2026-04-27 14:24:18] [INFO] Broadcast domain bd_cifs already exists
+[2026-04-27 14:24:18] [DEBUG] Checking if port na-clus01-01:e0e is in broadcast domain bd_cifs
+[2026-04-27 14:24:19] [DEBUG] Raw output from broadcast-domain show: '
+Last login time: 4/27/2026 12:24:18
+Unsuccessful login attempts since last login: 1
+
+               IPspace Name: Default
+   Layer 2 Broadcast Domain: bd_cifs
+             Configured MTU: 1500
+                      Ports: na-clus01-01:e0e
+                             na-clus01-02:e0e
+         Port Update Status: complete
+                             complete
+  Status Detail Description: complete
+                             complete
+Combined Port Update Status: complete
+            Failover Groups: bd_cifs
+               Subnet Names: -
+    Is VIP Broadcast Domain: false
+'
+[2026-04-27 14:24:19] [DEBUG] Checking if port na-clus01-02:e0e is in broadcast domain bd_cifs
+[2026-04-27 14:24:19] [DEBUG] Raw output from broadcast-domain show: '
+Last login time: 4/27/2026 12:24:19
+Unsuccessful login attempts since last login: 1
+
+               IPspace Name: Default
+   Layer 2 Broadcast Domain: bd_cifs
+             Configured MTU: 1500
+                      Ports: na-clus01-01:e0e
+                             na-clus01-02:e0e
+         Port Update Status: complete
+                             complete
+  Status Detail Description: complete
+                             complete
+Combined Port Update Status: complete
+            Failover Groups: bd_cifs
+               Subnet Names: -
+    Is VIP Broadcast Domain: false
+'
+[2026-04-27 14:24:20] [ERROR] Failed: Add port na-clus01-02:e0e to broadcast domain bd_cifs
+[2026-04-27 14:24:20] [DEBUG] ONTAP command failed: network port broadcast-domain add-ports -broadcast-domain bd_cifs -ipspace Default -ports na-clus01-02:e0e
+[2026-04-27 14:24:20] [DEBUG] ONTAP error output: 
+Last login time: 4/27/2026 12:24:19
+Unsuccessful login attempts since last login: 1
+
+Error: command failed: Port "na-clus01-02:e0e" is already assigned to broadcast
+       domain "bd_cifs" in IPspace "Default".
+

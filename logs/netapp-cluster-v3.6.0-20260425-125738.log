@@ -1,0 +1,29 @@
+[2026-04-25 12:57:38] [INFO] ==============================
+[2026-04-25 12:57:38] [INFO] Starting NetApp cluster setup 192.168.1.22
+[2026-04-25 12:57:38] [INFO] Version:       v3.6.0 (2026-04-24)
+[2026-04-25 12:57:38] [INFO] Config:        setup_ontap_2node_cluster.conf
+[2026-04-25 12:57:38] [INFO] Log file:      ./logs/netapp-cluster-v3.6.0-20260425-125738.log
+[2026-04-25 12:57:38] [INFO] Verbose:       0 | Dry-run: 0 | Color: auto
+[2026-04-25 12:57:38] [INFO] User:          admin
+[2026-04-25 12:57:38] [INFO] Nodes:         na-clus01-01 na-clus01-02
+[2026-04-25 12:57:38] [INFO] RAID type:     raid_dp | Disks: 8 | Spare reserve: 1
+[2026-04-25 12:57:38] [INFO] ==============================
+[2026-04-25 12:57:42] [INFO] Checking SSH connection to admin@192.168.1.22 ...
+[2026-04-25 12:57:43] [INFO] Key-based authentication not available, trying password...
+[2026-04-25 12:57:43] [INFO] SSH connection successful (sshpass password auth).
+[2026-04-25 12:57:44] [INFO] NTP server 192.168.1.1 already exists
+[2026-04-25 12:57:45] [DEBUG] Raw spare disks output for na-clus01-01: |Last login time: 4/25/2026 10:57:44|Unsuccessful login attempts since last login: 1|                                                                                           Usable           Disk    Container   Container|Disk                   Size Shelf Bay Type    Type        Name      Owner|---------------- ---------- ----- --- ------- ----------- --------- --------|NET-1.10             1020MB     -  19 FCAL    spare       Pool0     na-clus01-01|NET-1.14             1020MB     -  20 FCAL    spare       Pool0     na-clus01-01|NET-1.15             1020MB     -  21 FCAL    spare       Pool0     na-clus01-01|NET-1.16             1020MB     -  22 FCAL    spare       Pool0     na-clus01-01|
+[2026-04-25 12:57:45] [INFO] Node na-clus01-01: 11 spare disks available (needed: 8 + 1 reserve = 9)
+[2026-04-25 12:57:49] [INFO] Create data aggregate aggr_data_na_clus01_01 on na-clus01-01 (11 spare, 1 reserve kept)
+[2026-04-25 12:57:53] [DEBUG] Raw spare disks output for na-clus01-02: |Last login time: 4/25/2026 10:57:52|Unsuccessful login attempts since last login: 1|                                                                                           Usable           Disk    Container   Container|Disk                   Size Shelf Bay Type    Type        Name      Owner|---------------- ---------- ----- --- ------- ----------- --------- --------|NET-2.11             1020MB     -  19 FCAL    spare       Pool0     na-clus01-02|NET-2.13             1020MB     -  20 FCAL    spare       Pool0     na-clus01-02|NET-2.15             1020MB     -  21 FCAL    spare       Pool0     na-clus01-02|NET-2.17             1020MB     -  22 FCAL    spare       Pool0     na-clus01-02|
+[2026-04-25 12:57:53] [INFO] Node na-clus01-02: 11 spare disks available (needed: 8 + 1 reserve = 9)
+[2026-04-25 12:57:59] [INFO] Create data aggregate aggr_data_na_clus01_02 on na-clus01-02 (11 spare, 1 reserve kept)
+[2026-04-25 12:58:02] [ERROR] Failed: Remove port na-clus01-01:e0d from Cluster broadcast domain
+[2026-04-25 12:58:02] [DEBUG] ONTAP command failed: network port broadcast-domain remove-ports -broadcast-domain Cluster -ports na-clus01-01:e0d
+[2026-04-25 12:58:02] [DEBUG] ONTAP error output: 
+Last login time: 4/25/2026 10:58:01
+Unsuccessful login attempts since last login: 1
+
+Error: command failed: Broadcast domain "Cluster" in IPspace "Default" not
+       found.
+

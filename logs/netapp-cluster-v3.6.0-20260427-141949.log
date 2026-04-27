@@ -1,0 +1,13 @@
+[2026-04-27 14:19:49] [INFO] ==============================
+[2026-04-27 14:19:49] [INFO] Starting NetApp cluster setup 192.168.1.22
+[2026-04-27 14:19:49] [INFO] Version:       v3.6.0 (2026-04-24)
+[2026-04-27 14:19:49] [INFO] Config:        setup_ontap_2node_cluster.conf
+[2026-04-27 14:19:49] [INFO] Log file:      ./logs/netapp-cluster-v3.6.0-20260427-141949.log
+[2026-04-27 14:19:49] [INFO] Verbose:       0 | Dry-run: 0 | Color: auto
+[2026-04-27 14:19:49] [INFO] User:          admin
+[2026-04-27 14:19:49] [INFO] Nodes:         na-clus01-01 na-clus01-02
+[2026-04-27 14:19:49] [INFO] RAID type:     raid_dp | Disks: 8 | Spare reserve: 1
+[2026-04-27 14:19:49] [INFO] ==============================
+[2026-04-27 14:19:54] [INFO] Checking SSH connection to admin@192.168.1.22 ...
+[2026-04-27 14:19:54] [INFO] Key-based authentication not available, trying password...
+[2026-04-27 14:20:00] [ERROR] SSH connection failed with sshpass. Check NETAPP_PASSWORD.

@@ -1,0 +1,34 @@
+[2026-04-27 14:33:15] [INFO] ==============================
+[2026-04-27 14:33:15] [INFO] Starting NetApp cluster setup 192.168.1.22
+[2026-04-27 14:33:15] [INFO] Version:       v3.6.0 (2026-04-24)
+[2026-04-27 14:33:15] [INFO] Config:        setup_ontap_2node_cluster.conf
+[2026-04-27 14:33:15] [INFO] Log file:      ./logs/netapp-cluster-v3.6.0-20260427-143315.log
+[2026-04-27 14:33:15] [INFO] Verbose:       0 | Dry-run: 0 | Color: auto
+[2026-04-27 14:33:15] [INFO] User:          admin
+[2026-04-27 14:33:15] [INFO] Nodes:         na-clus01-01 na-clus01-02
+[2026-04-27 14:33:15] [INFO] RAID type:     raid_dp | Disks: 8 | Spare reserve: 1
+[2026-04-27 14:33:15] [INFO] ==============================
+[2026-04-27 14:33:19] [INFO] Checking SSH connection to admin@192.168.1.22 ...
+[2026-04-27 14:33:19] [INFO] Key-based authentication not available, trying password...
+[2026-04-27 14:33:20] [INFO] SSH connection successful (sshpass password auth).
+[2026-04-27 14:33:20] [INFO] NTP server 192.168.1.1 already exists
+[2026-04-27 14:33:21] [INFO] Data aggregate aggr_data_na_clus01_01 already exists
+[2026-04-27 14:33:22] [INFO] Data aggregate aggr_data_na_clus01_02 already exists
+[2026-04-27 14:33:23] [INFO] VLAN port na-clus01-01:e0d-20 already exists
+[2026-04-27 14:33:24] [INFO] VLAN port na-clus01-02:e0d-20 already exists
+[2026-04-27 14:33:26] [INFO] Set MTU 1500 on broadcast domain bd_cifs
+[2026-04-27 14:33:27] [INFO] Set MTU 9000 on broadcast domain bd_vlan20
+[2026-04-27 14:33:30] [INFO] Broadcast domain bd_cifs already exists
+[2026-04-27 14:33:31] [DEBUG] Port na-clus01-01:e0e already in broadcast domain bd_cifs
+[2026-04-27 14:33:31] [DEBUG] Port na-clus01-02:e0e already in broadcast domain bd_cifs
+[2026-04-27 14:33:35] [INFO] Broadcast domain bd_vlan20 already exists
+[2026-04-27 14:33:35] [DEBUG] Port na-clus01-01:e0d-20 already in broadcast domain bd_vlan20
+[2026-04-27 14:33:36] [DEBUG] Port na-clus01-02:e0d-20 already in broadcast domain bd_vlan20
+[2026-04-27 14:33:37] [ERROR] Failed: Create vserver svm_cifs01 (cifs)
+[2026-04-27 14:33:37] [DEBUG] ONTAP command failed: vserver create -vserver svm_cifs01 -subtype default -rootvolume svm_cifs01_root -rootvolume-security-style unix -aggregate aggr_data_na_clus01_01
+[2026-04-27 14:33:37] [DEBUG] ONTAP error output: 
+Last login time: 4/27/2026 12:32:36
+Unsuccessful login attempts since last login: 1
+
+Error: command failed: The Vserver name is already used by another Vserver. 
+

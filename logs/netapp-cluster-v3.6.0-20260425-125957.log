@@ -1,0 +1,21 @@
+[2026-04-25 12:59:57] [INFO] ==============================
+[2026-04-25 12:59:57] [INFO] Starting NetApp cluster setup 192.168.1.22
+[2026-04-25 12:59:57] [INFO] Version:       v3.6.0 (2026-04-24)
+[2026-04-25 12:59:57] [INFO] Config:        setup_ontap_2node_cluster.conf
+[2026-04-25 12:59:57] [INFO] Log file:      ./logs/netapp-cluster-v3.6.0-20260425-125957.log
+[2026-04-25 12:59:57] [INFO] Verbose:       0 | Dry-run: 0 | Color: auto
+[2026-04-25 12:59:57] [INFO] User:          admin
+[2026-04-25 12:59:57] [INFO] Nodes:         na-clus01-01 na-clus01-02
+[2026-04-25 12:59:57] [INFO] RAID type:     raid_dp | Disks: 8 | Spare reserve: 1
+[2026-04-25 12:59:57] [INFO] ==============================
+[2026-04-25 13:00:00] [INFO] Checking SSH connection to admin@192.168.1.22 ...
+[2026-04-25 13:00:01] [INFO] Key-based authentication not available, trying password...
+[2026-04-25 13:00:01] [INFO] SSH connection successful (sshpass password auth).
+[2026-04-25 13:00:02] [INFO] NTP server 192.168.1.1 already exists
+[2026-04-25 13:00:03] [INFO] Data aggregate aggr_data_na_clus01_01 already exists
+[2026-04-25 13:00:03] [INFO] Data aggregate aggr_data_na_clus01_02 already exists
+[2026-04-25 13:00:06] [INFO] Remove port na-clus01-01:e0d from Cluster broadcast domain
+[2026-04-25 13:00:09] [INFO] Create VLAN port na-clus01-01:e0d-20
+[2026-04-25 13:00:11] [INFO] Remove port na-clus01-02:e0d from Cluster broadcast domain
+[2026-04-25 13:00:14] [INFO] Create VLAN port na-clus01-02:e0d-20
+[2026-04-25 13:00:16] [ERROR] Port na-clus01-01:e0e does not exist on node na-clus01-01. Check the configuration.

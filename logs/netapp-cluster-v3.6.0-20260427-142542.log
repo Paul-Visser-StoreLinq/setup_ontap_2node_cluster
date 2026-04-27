@@ -1,0 +1,86 @@
+[2026-04-27 14:25:42] [INFO] ==============================
+[2026-04-27 14:25:42] [INFO] Starting NetApp cluster setup 192.168.1.22
+[2026-04-27 14:25:42] [INFO] Version:       v3.6.0 (2026-04-24)
+[2026-04-27 14:25:42] [INFO] Config:        setup_ontap_2node_cluster.conf
+[2026-04-27 14:25:42] [INFO] Log file:      ./logs/netapp-cluster-v3.6.0-20260427-142542.log
+[2026-04-27 14:25:42] [INFO] Verbose:       0 | Dry-run: 0 | Color: auto
+[2026-04-27 14:25:43] [INFO] User:          admin
+[2026-04-27 14:25:43] [INFO] Nodes:         na-clus01-01 na-clus01-02
+[2026-04-27 14:25:43] [INFO] RAID type:     raid_dp | Disks: 8 | Spare reserve: 1
+[2026-04-27 14:25:43] [INFO] ==============================
+[2026-04-27 14:25:46] [INFO] Checking SSH connection to admin@192.168.1.22 ...
+[2026-04-27 14:25:47] [INFO] Key-based authentication not available, trying password...
+[2026-04-27 14:25:47] [INFO] SSH connection successful (sshpass password auth).
+[2026-04-27 14:25:48] [INFO] NTP server 192.168.1.1 already exists
+[2026-04-27 14:25:49] [INFO] Data aggregate aggr_data_na_clus01_01 already exists
+[2026-04-27 14:25:49] [INFO] Data aggregate aggr_data_na_clus01_02 already exists
+[2026-04-27 14:25:51] [INFO] VLAN port na-clus01-01:e0d-20 already exists
+[2026-04-27 14:25:52] [INFO] VLAN port na-clus01-02:e0d-20 already exists
+[2026-04-27 14:25:53] [INFO] Set MTU 1500 on broadcast domain bd_cifs
+[2026-04-27 14:25:55] [INFO] Set MTU 9000 on broadcast domain bd_vlan20
+[2026-04-27 14:25:58] [INFO] Broadcast domain bd_cifs already exists
+[2026-04-27 14:25:59] [DEBUG] Port na-clus01-01:e0e already in broadcast domain bd_cifs
+[2026-04-27 14:25:59] [DEBUG] Port na-clus01-02:e0e already in broadcast domain bd_cifs
+[2026-04-27 14:26:02] [INFO] Broadcast domain bd_vlan20 already exists
+[2026-04-27 14:26:03] [DEBUG] Port na-clus01-01:e0d-20 already in broadcast domain bd_vlan20
+[2026-04-27 14:26:04] [DEBUG] Port na-clus01-02:e0d-20 already in broadcast domain bd_vlan20
+[2026-04-27 14:26:13] [INFO] Create vserver svm_cifs01 (cifs)
+[2026-04-27 14:26:13] [INFO] Enable protocols cifs for svm_cifs01
+[2026-04-27 14:26:20] [INFO] Create vserver svm_nfs01 (nfs)
+[2026-04-27 14:26:20] [INFO] Enable protocols nfs for svm_nfs01
+[2026-04-27 14:26:28] [INFO] Create vserver svm_iscsi01 (iscsi)
+[2026-04-27 14:26:28] [INFO] Enable protocols iscsi for svm_iscsi01
+[2026-04-27 14:26:30] [INFO] Create export policy exp_svm_cifs01
+[2026-04-27 14:26:30] [INFO] Create export policy rule for exp_svm_cifs01
+[2026-04-27 14:26:32] [INFO] Create export policy exp_svm_nfs01
+[2026-04-27 14:26:33] [INFO] Create export policy rule for exp_svm_nfs01
+[2026-04-27 14:26:35] [DEBUG] next_available_ip called with base_ip=192.168.1.25, offset=0
+[2026-04-27 14:26:35] [DEBUG] EXCLUDED_IPS has 1 elements
+[2026-04-27 14:26:35] [DEBUG] EXCLUDED_IPS[0] = '192.168.1.25'
+[2026-04-27 14:26:35] [DEBUG] IP 192.168.1.25 is excluded, trying next
+[2026-04-27 14:26:36] [DEBUG] Checking if IP 192.168.1.26 is used, result: |Last login time: 4/27/2026 12:26:35|Unsuccessful login attempts since last login: 1|
+[2026-04-27 14:26:36] [DEBUG] Using available IP: 192.168.1.26
+[2026-04-27 14:26:37] [DEBUG] Creating CIFS LIF svm_cifs01:lif_cifs_na_clus01_01 with IP 192.168.1.26 on port e0e for node na-clus01-01
+[2026-04-27 14:26:38] [INFO] Create CIFS LIF svm_cifs01:lif_cifs_na_clus01_01 with IP 192.168.1.26
+[2026-04-27 14:26:42] [DEBUG] next_available_ip called with base_ip=192.168.1.25, offset=1
+[2026-04-27 14:26:42] [DEBUG] EXCLUDED_IPS has 1 elements
+[2026-04-27 14:26:42] [DEBUG] EXCLUDED_IPS[0] = '192.168.1.25'
+[2026-04-27 14:26:43] [DEBUG] Checking if IP 192.168.1.26 is used, result: |Last login time: 4/27/2026 12:26:42|Unsuccessful login attempts since last login: 1|
+[2026-04-27 14:26:43] [DEBUG] IP 192.168.1.26 is already in use, trying next
+[2026-04-27 14:26:43] [DEBUG] Checking if IP 192.168.1.27 is used, result: |Last login time: 4/27/2026 12:26:42|Unsuccessful login attempts since last login: 1|
+[2026-04-27 14:26:44] [DEBUG] Using available IP: 192.168.1.27
+[2026-04-27 14:26:44] [DEBUG] Creating CIFS LIF svm_cifs01:lif_cifs_na_clus01_02 with IP 192.168.1.27 on port e0e for node na-clus01-02
+[2026-04-27 14:26:45] [INFO] Create CIFS LIF svm_cifs01:lif_cifs_na_clus01_02 with IP 192.168.1.27
+[2026-04-27 14:26:47] [DEBUG] next_available_ip called with base_ip=192.168.20.25, offset=0
+[2026-04-27 14:26:47] [DEBUG] EXCLUDED_IPS has 1 elements
+[2026-04-27 14:26:47] [DEBUG] EXCLUDED_IPS[0] = '192.168.1.25'
+[2026-04-27 14:26:48] [DEBUG] Checking if IP 192.168.20.25 is used, result: |Last login time: 4/27/2026 12:26:45|Unsuccessful login attempts since last login: 1|
+[2026-04-27 14:26:48] [DEBUG] Using available IP: 192.168.20.25
+[2026-04-27 14:26:50] [INFO] Create VLAN20 LIF svm_nfs01:lif_nfs_na_clus01_01 with IP 192.168.20.25
+[2026-04-27 14:26:52] [DEBUG] next_available_ip called with base_ip=192.168.20.25, offset=1
+[2026-04-27 14:26:52] [DEBUG] EXCLUDED_IPS has 1 elements
+[2026-04-27 14:26:52] [DEBUG] EXCLUDED_IPS[0] = '192.168.1.25'
+[2026-04-27 14:26:53] [DEBUG] Checking if IP 192.168.20.26 is used, result: |Last login time: 4/27/2026 12:26:50|Unsuccessful login attempts since last login: 1|
+[2026-04-27 14:26:53] [DEBUG] Using available IP: 192.168.20.26
+[2026-04-27 14:26:54] [INFO] Create VLAN20 LIF svm_nfs01:lif_nfs_na_clus01_02 with IP 192.168.20.26
+[2026-04-27 14:26:56] [DEBUG] next_available_ip called with base_ip=192.168.20.25, offset=2
+[2026-04-27 14:26:56] [DEBUG] EXCLUDED_IPS has 1 elements
+[2026-04-27 14:26:56] [DEBUG] EXCLUDED_IPS[0] = '192.168.1.25'
+[2026-04-27 14:26:57] [DEBUG] Checking if IP 192.168.20.27 is used, result: |Last login time: 4/27/2026 12:26:54|Unsuccessful login attempts since last login: 1|
+[2026-04-27 14:26:57] [DEBUG] Using available IP: 192.168.20.27
+[2026-04-27 14:28:30] [INFO] Create VLAN20 LIF svm_iscsi01:lif_iscsi_na_clus01_01 with IP 192.168.20.27
+[2026-04-27 14:28:32] [DEBUG] next_available_ip called with base_ip=192.168.20.25, offset=3
+[2026-04-27 14:28:32] [DEBUG] EXCLUDED_IPS has 1 elements
+[2026-04-27 14:28:32] [DEBUG] EXCLUDED_IPS[0] = '192.168.1.25'
+[2026-04-27 14:28:44] [DEBUG] Checking if IP 192.168.20.28 is used, result: |Last login time: 4/27/2026 12:26:58|Unsuccessful login attempts since last login: 1|
+[2026-04-27 14:28:44] [DEBUG] Using available IP: 192.168.20.28
+[2026-04-27 14:28:46] [ERROR] Failed: Create VLAN20 LIF svm_iscsi01:lif_iscsi_na_clus01_02 with IP 192.168.20.28
+[2026-04-27 14:28:46] [DEBUG] ONTAP command failed: network interface create -vserver svm_iscsi01 -lif lif_iscsi_na_clus01_02 -service-policy default-data-files -home-node na-clus01-02 -home-port e0d-20 -address 192.168.20.28 -netmask 255.255.255.0
+[2026-04-27 14:28:46] [DEBUG] ONTAP error output: 
+Last login time: 4/27/2026 12:27:45
+Unsuccessful login attempts since last login: 1
+
+Error: command failed: Node "na-clus01-02" on ring "VifMgr" is offline. Check
+       the health of the cluster using the "cluster show" command. For further
+       assistance, contact technical support.
+
